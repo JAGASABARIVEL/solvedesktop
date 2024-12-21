@@ -1,0 +1,107 @@
+<div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
+    <div class="flex flex-column align-items-center justify-content-center">
+        <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+            <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
+                <div class="text-center mb-5">
+                    <img src="assets/layout/images/{{layoutService.config().colorScheme === 'light' ? 'logo-dark' : 'logo-white'}}.svg" alt="Sakai logo" height="50" class="mb-3" class="mb-5 w-6rem flex-shrink-0"> 
+                    <div class="text-900 text-3xl font-medium mb-3">Bcast</div>
+                    <span *ngIf="loading != true"  class="text-600 font-medium">Signup to continue</span>
+                    <span *ngIf="loading == true"  class="text-600 font-medium">Almost done while we are signing you up...</span>
+                </div>
+
+                <form *ngIf="loading != true" [formGroup]="formGroup" (ngSubmit)="signupButton()">
+                    <input id="name" type="text" pInputText controllername="user_name" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_name">
+                    <input id="phone" type="text" pInputText controllername="user_phone" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_phone">
+                    <input id="email" type="text" pInputText controllername="user_email" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_email">
+                    <div class="">
+                        <p-selectButton styleClass="block w-full md:w-30rem p-2 mb-5"
+                    [options]="roles" 
+                    formControlName="user_role"
+                    optionLabel="label" 
+                    optionValue="value"
+                    (onChange)="onRoleSelect($event)" />
+                    </div>
+                    <input *ngIf="role_selected=='OR'" id="organization" type="text" pInputText controllername="user_organization" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_organization">
+                    <p-dropdown 
+                        id="organization"
+                        styleClass="w-full md:w-30rem p-2 mb-5"
+                        *ngIf="role_selected=='EE'"
+                        [options]="organization"
+                        [(ngModel)]="selectedOrganization"
+                        formControlName="user_organization"
+                        optionLabel="name"
+                        [filter]="true"
+                        filterBy="name" 
+                        [showClear]="true"
+                        placeholder="Select a Organization">
+                            <ng-template pTemplate="selectedItem">
+                                <div class="flex align-items-center gap-2" *ngIf="selectedOrganization">
+                                    <img 
+                                        src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png"
+                                        [class]="'flag flag-' + selectedOrganization.code.toLowerCase()"
+                                        style="width: 18px" />
+                                    <div>{{ selectedOrganization.name }}</div>
+                                </div>
+                            </ng-template>
+                            <ng-template let-country pTemplate="item">
+                                <div class="flex align-items-center gap-2">
+                                    <img 
+                                        src="https://primefaces.org/cdn/primeng/images/demo/flag/flag_placeholder.png"
+                                        [class]="'flag flag-' + country.code.toLowerCase()" 
+                                        style="width: 18px" />
+                                    <div>{{ country.name }}</div>
+                                </div>
+                            </ng-template>
+                    </p-dropdown>
+                    <p-dropdown 
+                        id="platform"
+                        styleClass="w-full md:w-30rem p-2 mb-5"
+                        *ngIf="role_selected=='OR'"
+                        [options]="supported_platforms"
+                        [(ngModel)]="selected_platform"
+                        formControlName="user_platform"
+                        optionLabel="name"
+                        [filter]="true"
+                        filterBy="name" 
+                        [showClear]="true"
+                        placeholder="Select a platform">
+                    </p-dropdown>
+                    <input *ngIf="role_selected=='OR'" id="platform_key" type="text" pInputText controllername="user_platform_key" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_platform_key">
+
+                    <p-password id="password" [toggleMask]="true" class="block" inputStyleClass="w-full md:w-30rem p-3" formControlName="user_password"></p-password>
+                    <div class="mb-5"></div>
+                    <p-password id="confirm_password" [toggleMask]="true" class="block" inputStyleClass="w-full md:w-30rem p-3" formControlName="user_confirm_password"></p-password>
+                    <div class="flex align-items-center justify-content-between mb-5 gap-5">
+                        <div class="flex align-items-center">
+                            <p-checkbox id="rememberme1" [binary]="true" styleClass="mr-2"></p-checkbox>
+                            <label for="rememberme1">Remember me</label>
+                        </div>
+                        <a class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)" (click)="navigateToLogin()">Sign In?</a>
+                    </div>
+
+                    <button type="submit" pButton [disabled]="formGroup.invalid" pRipple label="Sign Up" class="w-full p-3 text-xl"></button>
+                </form>
+
+                <div *ngIf="loading" class="border-round border-1 surface-border p-4 surface-card">
+                    <div class="flex mb-3">
+                        <p-skeleton shape="circle" size="4rem" styleClass="mr-2" />
+                        <div>
+                            <p-skeleton width="10rem" styleClass="mb-2" />
+                            <p-skeleton width="5rem" styleClass="mb-2" />
+                            <p-skeleton height=".5rem" />
+                        </div>
+                    </div>
+                    <p-skeleton width="100%" height="150px" />
+                    <div class="flex justify-content-between mt-3">
+                        <p-skeleton width="4rem" height="2rem" />
+                        <p-skeleton width="4rem" height="2rem" />
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+

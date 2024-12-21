@@ -1,0 +1,43 @@
+<div class="card">
+    <p-tabView styleClass="tabview-custom">
+        <p-tabPanel>
+            <ng-template pTemplate="header">
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-whatsapp"></i>
+                    <span class="font-bold white-space-nowrap m-0">
+                        Message
+                    </span>
+                </div>
+            </ng-template>
+            <app-compose-message></app-compose-message>
+        </p-tabPanel>
+        
+        <p-tabPanel header="Header III">
+            <ng-template pTemplate="header">
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-calendar-clock"></i>
+                    <span class="font-bold white-space-nowrap m-0">
+                        Schedules
+                    </span>
+                    <p-badge value="2" />
+                </div>
+            </ng-template>
+            <app-crud-schedules></app-crud-schedules>
+        </p-tabPanel>
+
+        <p-tabPanel header="Header III">
+            <ng-template pTemplate="header">
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-history"></i>
+                    <span class="font-bold white-space-nowrap m-0">
+                        Message History
+                    </span>
+                    <p-badge value="1" />
+                </div>
+            </ng-template>
+            <app-message-history></app-message-history>
+        </p-tabPanel>
+
+
+    </p-tabView>
+</div>

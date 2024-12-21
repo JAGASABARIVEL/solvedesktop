@@ -1,0 +1,208 @@
+<p-toast />
+
+<div class="grid">
+    <div class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+            <input
+            id="name"
+            type="text"
+            pInputText
+            [(ngModel)]="schedule_name"
+            class="w-full p-3"
+            (keyup)="onScheduleNameSelected()"
+        >
+        </div>
+    </div>
+    <div *ngIf="schedule_name != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+                <p-dropdown
+                    styleClass="w-full p-2"
+                    [options]="contact_types"
+                    [(ngModel)]="selected_contact_type"
+                    optionLabel="name"
+                    [filter]="true"
+                    filterBy="name"
+                    [showClear]="true"
+                    placeholder="Select a Contact Type"
+                    (onChange)="onContactTypeSelected()"
+                    >
+                </p-dropdown>
+        </div>
+    </div>
+
+    <div *ngIf="selected_contact_type != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+                <p-inputGroup>
+                    <p-multiSelect
+                    styleClass="w-full p-2"
+                    [options]="contacts" 
+                    [(ngModel)]="selected_contacts" 
+                    optionLabel="name" 
+                    [placeholder]="contact_list_placeholder"
+                    (onChange)="onContactSelected()"
+                    />
+                    <button type="button" pButton icon="pi pi-plus" (click)="add_new_contact()"></button>
+                </p-inputGroup>
+        </div>
+    </div>
+
+    <div *ngIf="selected_contacts != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+            <p-calendar
+            styleClass="w-full p-2"
+            [(ngModel)]="selected_date_time" 
+            [showIcon]="true"
+            [showTime]="true"
+            inputId="schedule_date" 
+            [showOnFocus]="false"
+            (onSelect)="onScheduleDateTimeSelected()"
+            />
+        </div>
+    </div>
+
+    <div *ngIf="selected_date_time != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+            <p-dropdown
+            styleClass="w-full p-2"
+            [options]="frequency" 
+            [(ngModel)]="selected_frequency"
+            [filter]="true"
+            filterBy="label"
+            [showClear]="true"
+            optionLabel="label" 
+            placeholder="Frequency"
+            (onChange)="onFrequencySelected()"
+            >
+            </p-dropdown>
+        </div>
+    </div>
+
+    <div *ngIf="selected_date_time != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+            <p-multiSelect
+                styleClass="w-full p-2"
+                [options]="platform" 
+                [(ngModel)]="selected_platform" 
+                optionLabel="platform_name" 
+                [placeholder]="contact_list_placeholder"
+                (onChange)="onPlatformSelected()"
+                />
+        </div>
+    </div>
+
+    <div *ngIf="selected_platform != undefined" class="col-12 lg:col-6 xl:col-3">
+        <div class="card mb-0">
+            <p-dropdown
+                styleClass="w-full p-2"
+                [options]="datasource" 
+                [(ngModel)]="selected_datasource"
+                [filter]="true"
+                filterBy="name"
+                [showClear]="true"
+                optionLabel="name" 
+                placeholder="Select Data Source"
+                (onChange)="onDatasourceSelected()"
+                >
+            </p-dropdown>
+        </div>
+    </div>
+
+    <div *ngIf="selected_platform != undefined" class="col-12">
+        <p-fileUpload name="myfile[]" [multiple]="false" accept=".xls,.xlsx" maxFileSize="1000000000" (onUpload)="onTemplatedUpload()" (onSelect)="onSelectedFiles($event)">
+            <ng-template pTemplate="header" let-files let-chooseCallback="chooseCallback" let-clearCallback="clearCallback" let-uploadCallback="uploadCallback">
+                <div class="flex flex-wrap justify-content-between align-items-center flex-1 gap-2">
+                    <div class="flex gap-2">
+                        <p-button (onClick)="choose($event, chooseCallback)" icon="pi pi-images" [rounded]="true" [outlined]="true" />
+                        <p-button (onClick)="clearCallback()" icon="pi pi-times" [rounded]="true" [outlined]="true" severity="danger" [disabled]="!files || files.length === 0" />
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="content" let-files let-uploadedFiles="uploadedFiles" let-removeFileCallback="removeFileCallback" let-removeUploadedFileCallback="removeUploadedFileCallback">
+                <div *ngIf="files?.length > 0">
+                    <h5>Files Selected</h5>
+                    <div class="flex flex-wrap p-0 sm:p-5 gap-5">
+                        <div *ngFor="let file of files; let i = index" class="card m-0 px-6 flex flex-column border-1 surface-border align-items-center gap-3">
+                            <div>
+                                <img role="presentation" [alt]="file.name" [src]="excel_icon" width="100" height="50" />
+                            </div>
+                            <span class="font-semibold">{{ file.name }}</span>
+                            <div>{{ formatSize(file.size) }}</div>
+                            <p-badge value="selected" severity="warning" />
+                            <p-button icon="pi pi-times" (onClick)="onRemoveTemplatingFile($event, file, removeFileCallback, i)" [outlined]="true" [rounded]="true" severity="danger" />
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="file"> </ng-template>
+            <ng-template pTemplate="empty">
+                <div class="flex align-items-center justify-content-center flex-column">
+                    <i class="pi pi-cloud-upload border-2 border-circle p-5 text-8xl text-400 border-400"></i>
+                    <p class="mt-4 mb-0">Drag and drop files here to upload.</p>
+                </div>
+            </ng-template>
+        </p-fileUpload>
+    </div>
+
+    <div *ngIf="selected_datasource != undefined" class="col-12">
+        <p-editor (onTextChange)="onMessageText($event)" [style]="{ height: '320px' }" />
+    </div>
+
+    <div *ngIf="selected_datasource != undefined" class="col-12 flex justify-content-end gap-2">
+        <p-button (click)="onReset()" label="Reset" severity="secondary" (onClick)="add_contact_modal_visible = false" />
+        <p-button label="Schedule" (click)="onSchedule()" />
+    </div>
+
+</div>
+
+
+<p-dialog 
+    header="Add Contact" 
+    [modal]="true"
+    [(visible)]="add_contact_modal_visible" 
+    position="top"
+    [style]="{ width: '25rem' }">
+    <span class="block mb-5">
+    </span>
+    <p-floatLabel>
+        <input id="username" type="text" pInputText [(ngModel)]="new_contact.name" class="bg-secondary block w-full mb-5 p-3"/>    
+        <label for="username">User Name</label>
+    </p-floatLabel>
+
+    <p-floatLabel>
+        <input id="phone" type="text" pInputText [(ngModel)]="new_contact.phone" class="bg-secondary block w-full mb-5 p-3"/>    
+        <label for="phone">Phone</label>
+    </p-floatLabel>
+
+    <div class="flex justify-content-end gap-2">
+        <p-button label="Cancel" severity="secondary" (onClick)="add_contact_modal_visible = false" />
+        <p-button label="Save" (onClick)="add_individual_contacts()" />
+    </div>
+</p-dialog>
+
+<p-dialog 
+    header="Create Group" 
+    [modal]="true"
+    [(visible)]="create_group_modal_visible" 
+    [style]="{ width: '25rem' }"
+    >
+    
+    <p-floatLabel>
+        <input id="groupname" type="text" pInputText [(ngModel)]="newGroup.name" class="bg-secondary block w-full mb-5 p-3"/>    
+        <label for="groupname">Group Name</label>
+    </p-floatLabel>
+    
+    <div *ngIf="selected_contact_type != undefined" class="flex">
+            <p-multiSelect
+            styleClass="flex w-full mb-5 p-2"
+            [options]="individual_contacts"
+            [(ngModel)]="selected_contacts_for_creating_group" 
+            optionLabel="name"
+            appendTo="body"
+            [placeholder]="contact_list_placeholder" />
+    </div>
+
+    <div class="flex justify-content-end gap-2">
+        <p-button label="Cancel" severity="secondary" (onClick)="create_group_modal_visible = false" />
+        <p-button label="Save" (onClick)="create_group()" />
+    </div>
+</p-dialog>

@@ -1,0 +1,56 @@
+<div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
+    <div class="flex flex-column align-items-center justify-content-center">
+        <img src="assets/layout/images/{{layoutService.config().colorScheme === 'light' ? 'logo-dark' : 'logo-white'}}.svg" alt="Sakai logo" class="mb-5 w-6rem flex-shrink-0">                
+        <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+            <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius:53px">
+                <div class="text-center mb-5">
+                    <img src="assets/demo/images/login/avatar.png" alt="Image" height="50" class="mb-3">
+                    <div class="text-900 text-3xl font-medium mb-3">Welcome!</div>
+                    <span *ngIf="loading == true"  class="text-600 font-medium">Almost done while we are signing you in ...</span>
+                    <span *ngIf="loading != true" class="text-600 font-medium">Sign in to continue</span>
+                </div>
+
+                <form *ngIf="loading != true" [formGroup]="formGroup" (ngSubmit)="loginButton()">
+                    <p-floatLabel class="block w-full md:w-30rem mb-5">
+                        <input id="phone" type="text" pInputText controllername="user_phone" class="w-full p-3" formControlName="user_phone">
+                        <label for="phone" *ngIf="formGroup.get('user_phone')?.invalid && !formGroup.get('user_phone')?.touched">Phone</label>
+                        <label for="phone" *ngIf="formGroup.get('user_phone')?.invalid && formGroup.get('user_phone')?.touched" style="color: red;">Phone number can not be empty</label>
+                    </p-floatLabel>
+
+                    <p-floatLabel class="block mb-5">
+                        <p-password id="password" [toggleMask]="true" inputStyleClass="w-full p-3 md:w-30rem" formControlName="user_password"></p-password>
+                        <label for="phone" *ngIf="formGroup.get('user_password')?.invalid && !formGroup.get('user_password')?.touched">Password</label>
+                        <label for="phone" *ngIf="formGroup.get('user_password')?.invalid && formGroup.get('user_password')?.touched" style="color: red;">Minimum length of the password is 8</label>
+                    </p-floatLabel>
+
+                    <div class="flex align-items-center justify-content-between mb-5 gap-5">
+                        <div class="flex align-items-center">
+                            <p-checkbox id="rememberme1" [binary]="true" styleClass="mr-2"></p-checkbox>
+                            <label for="rememberme1">Remember me</label>
+                        </div>
+                        <a class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)" (click)="navigateToSignUp()">Sign Up?</a>
+                    </div>
+
+                    <button type="submit" pButton [disabled]="formGroup.invalid" pRipple label="Sign In" class="w-full p-3 text-xl"></button>
+                </form>
+
+                <div *ngIf="loading" class="border-round border-1 surface-border p-4 surface-card">
+                    <div class="flex mb-3">
+                        <p-skeleton shape="circle" size="4rem" styleClass="mr-2" />
+                        <div>
+                            <p-skeleton width="10rem" styleClass="mb-2" />
+                            <p-skeleton width="5rem" styleClass="mb-2" />
+                            <p-skeleton height=".5rem" />
+                        </div>
+                    </div>
+                    <p-skeleton width="100%" height="150px" />
+                    <div class="flex justify-content-between mt-3">
+                        <p-skeleton width="4rem" height="2rem" />
+                        <p-skeleton width="4rem" height="2rem" />
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

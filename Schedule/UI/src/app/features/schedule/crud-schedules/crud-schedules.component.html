@@ -1,0 +1,183 @@
+<div class="card">
+    <p-table
+        #dt2
+        [value]="schedules"
+        dataKey="id"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [loading]="loading"
+        [paginator]="true"
+        [tableStyle]="{ 'min-width': '75rem' }"
+    >
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Schedule Name</th>
+            <th>Recipient</th>
+            <th>Recipient Type</th>
+            <th>Platform</th>
+            <th>Frequency</th>
+            <th>Created At</th>
+            <th>Created By</th>
+        </tr>
+        <tr>
+            <th>
+                <p-columnFilter field="name" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="schedule_names"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true">
+                            <ng-template let-option pTemplate="item">
+                                <p-tag 
+                                    [value]="option.value" 
+                                    [severity]="getSeverity(option.value)" />
+                            </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+            <th>
+                <p-columnFilter field="recipient_name" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="recipient_names"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true">
+                            <ng-template let-option pTemplate="item">
+                                <p-tag 
+                                    [value]="option.value" 
+                                    [severity]="getSeverity(option.value)" />
+                            </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+            <th>
+                <p-columnFilter field="recipient_type" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="recipient_types"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true">
+							<ng-template let-option pTemplate="item">
+                                <p-tag 
+                                    [value]="option.value" 
+                                    [severity]="getSeverity(option.value)" />
+                            </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+            <th>
+                <p-columnFilter field="platform_name" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="available_platforms"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true">
+							<ng-template let-option pTemplate="item">
+                                <p-tag 
+                                    [value]="option.value" 
+                                    [severity]="getSeverity(option.value)" />
+                            </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+            <th>
+                <p-columnFilter field="frequency" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="statuses"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="label"
+                            [showClear]="true">
+                                <ng-template let-option pTemplate="item">
+                                    <p-tag 
+                                        [value]="option.label" 
+                                        [severity]="getSeverity(option.label)" />
+                                </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+            <th>
+                <p-columnFilter type="date" field="created_at" display="menu" />
+            </th>
+            <th>
+                <p-columnFilter field="created_by" matchMode="equals" [showMenu]="false">
+                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                        <p-dropdown 
+                            [ngModel]="value" 
+                            [options]="creators"
+                            (onChange)="filter($event.value)" 
+                            placeholder="Select One"
+                            [filter]="true"
+                            filterBy="name"
+                            [showClear]="true">
+							<ng-template let-option pTemplate="item">
+                                <p-tag 
+                                    [value]="option.value" 
+                                    [severity]="getSeverity(option.value)" />
+                            </ng-template>
+                        </p-dropdown>
+                    </ng-template>
+                </p-columnFilter>
+            </th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-schedule>
+        <tr>
+            <td>
+                {{ schedule.name }}
+            </td>
+            <td>
+                {{ schedule.recipient_name }}
+            </td>
+            <td>
+                {{ schedule.recipient_type }}
+            </td>
+            <td>
+                {{ schedule.platform_name }}
+            </td>
+            <td>
+                <p-tag 
+                    [value]="getFrequencyByName(schedule.frequency)" 
+                    [severity]="getSeverity(schedule.frequency)" />
+            </td>
+            <td>
+                {{ schedule.created_at }}
+            </td>
+            <td>
+                {{ schedule.created_by }}
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="5">No customers found.</td>
+            
+        </tr>
+        
+    </ng-template>
+    </p-table>
+</div>
