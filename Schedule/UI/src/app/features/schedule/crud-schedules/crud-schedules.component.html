@@ -1,183 +1,433 @@
 <div class="card">
+    <p-toast />
+    <p-toolbar styleClass="mb-4 gap-2">
+        <ng-template pTemplate="left">
+            <p-button
+                severity="success"
+                label="Start"
+                icon="pi pi-play"
+                class="mr-2"
+                (onClick)="startSelectedSchedules()"
+                [disabled]="!selectedSchedules || !selectedSchedules.length"
+            />
+            <p-button
+                severity="danger"
+                label="Cancel"
+                icon="pi pi-power-off"
+                (onClick)="cancelSelectedSchedules()"
+                [disabled]="!selectedSchedules || !selectedSchedules.length"
+            />
+        </ng-template>
+        <ng-template pTemplate="right">
+            <p-button
+                severity="success"
+                icon="pi pi-replay"
+                class="mr-2"
+                (onClick)="loadSchedules()"
+            />
+        </ng-template>
+    </p-toolbar>
+
     <p-table
-        #dt2
+        #dt
         [value]="schedules"
-        dataKey="id"
         [rows]="10"
-        [rowsPerPageOptions]="[10, 25, 50]"
-        [loading]="loading"
         [paginator]="true"
+        [globalFilterFields]="['name', 'recipient_name', 'recipient_type', 'status', 'created_by', 'created_at', 'frequency', 'platform_name']"
         [tableStyle]="{ 'min-width': '75rem' }"
+        [(selection)]="selectedSchedules"
+        [rowHover]="true"
+        dataKey="id"
+        [loading]="loading"
+        
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        [showCurrentPageReport]="true"
     >
-    <ng-template pTemplate="header">
-        <tr>
-            <th>Schedule Name</th>
-            <th>Recipient</th>
-            <th>Recipient Type</th>
-            <th>Platform</th>
-            <th>Frequency</th>
-            <th>Created At</th>
-            <th>Created By</th>
-        </tr>
-        <tr>
-            <th>
-                <p-columnFilter field="name" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="schedule_names"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true">
-                            <ng-template let-option pTemplate="item">
-                                <p-tag 
-                                    [value]="option.value" 
-                                    [severity]="getSeverity(option.value)" />
-                            </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-            <th>
-                <p-columnFilter field="recipient_name" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="recipient_names"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true">
-                            <ng-template let-option pTemplate="item">
-                                <p-tag 
-                                    [value]="option.value" 
-                                    [severity]="getSeverity(option.value)" />
-                            </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-            <th>
-                <p-columnFilter field="recipient_type" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="recipient_types"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true">
-							<ng-template let-option pTemplate="item">
-                                <p-tag 
-                                    [value]="option.value" 
-                                    [severity]="getSeverity(option.value)" />
-                            </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-            <th>
-                <p-columnFilter field="platform_name" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="available_platforms"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true">
-							<ng-template let-option pTemplate="item">
-                                <p-tag 
-                                    [value]="option.value" 
-                                    [severity]="getSeverity(option.value)" />
-                            </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-            <th>
-                <p-columnFilter field="frequency" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="statuses"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="label"
-                            [showClear]="true">
+        <ng-template pTemplate="caption">
+            <div class="flex align-items-center justify-content-between">
+                <h5 class="m-0"></h5>
+                <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input 
+                        pInputText 
+                        type="text" 
+                        #searchInput 
+                        (input)="onSearchInput($event, dt)"
+                        placeholder="Search..."
+                    />
+                </span>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 4rem">
+                    <p-tableHeaderCheckbox />
+                </th>
+                <th pSortableColumn="name">
+                    <div class="flex justify-content-between align-items-center">
+                        Schedule Name
+                        <p-sortIcon field="name" />
+                    </div>
+                </th>
+                <th pSortableColumn="recipient_name">
+                    <div class="flex justify-content-between align-items-center">
+                        Recipient
+                        <p-sortIcon field="recipient_name" />
+                    </div>
+                </th>
+                <th pSortableColumn="platform_name">
+                    <div class="flex justify-content-between align-items-center">
+                        Platform
+                        <p-sortIcon field="platform_name" />
+                    </div>
+                </th>
+                <th pSortableColumn="frequency">
+                    <div class="flex justify-content-between align-items-center">
+                        Frequency
+                        <p-sortIcon field="platform_name" />
+                    </div>
+                </th>
+                <th pSortableColumn="status" style="min-width: 18rem">
+                    <div class="flex justify-content-between align-items-center">
+                        Status
+                        <p-sortIcon field="status" />
+                    </div>
+                </th>
+                <th style="min-width: 18rem">
+                    Action
+                </th>
+            </tr>
+            <tr>
+                <th></th>
+                <th>
+                    <p-columnFilter field="name" matchMode="equals" [showMenu]="false">
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                            <p-dropdown 
+                                [ngModel]="value" 
+                                [options]="schedule_names"
+                                (onChange)="filter($event.value)" 
+                                placeholder="Select One"
+                                [filter]="true"
+                                filterBy="name"
+                                [showClear]="true">
                                 <ng-template let-option pTemplate="item">
                                     <p-tag 
-                                        [value]="option.label" 
-                                        [severity]="getSeverity(option.label)" />
+                                        [value]="option.value" 
+                                        [severity]="getSeverity(option.value)" />
                                 </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-            <th>
-                <p-columnFilter type="date" field="created_at" display="menu" />
-            </th>
-            <th>
-                <p-columnFilter field="created_by" matchMode="equals" [showMenu]="false">
-                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                        <p-dropdown 
-                            [ngModel]="value" 
-                            [options]="creators"
-                            (onChange)="filter($event.value)" 
-                            placeholder="Select One"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true">
-							<ng-template let-option pTemplate="item">
-                                <p-tag 
-                                    [value]="option.value" 
-                                    [severity]="getSeverity(option.value)" />
-                            </ng-template>
-                        </p-dropdown>
-                    </ng-template>
-                </p-columnFilter>
-            </th>
-        </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-schedule>
-        <tr>
-            <td>
-                {{ schedule.name }}
-            </td>
-            <td>
-                {{ schedule.recipient_name }}
-            </td>
-            <td>
-                {{ schedule.recipient_type }}
-            </td>
-            <td>
-                {{ schedule.platform_name }}
-            </td>
-            <td>
-                <p-tag 
-                    [value]="getFrequencyByName(schedule.frequency)" 
-                    [severity]="getSeverity(schedule.frequency)" />
-            </td>
-            <td>
-                {{ schedule.created_at }}
-            </td>
-            <td>
-                {{ schedule.created_by }}
-            </td>
-        </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-        <tr>
-            <td colspan="5">No customers found.</td>
-            
-        </tr>
-        
-    </ng-template>
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th>
+                    <p-columnFilter field="recipient_name" matchMode="equals" [showMenu]="false">
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                            <p-dropdown 
+                                [ngModel]="value" 
+                                [options]="recipient_names"
+                                (onChange)="filter($event.value)" 
+                                placeholder="Select One"
+                                [filter]="true"
+                                filterBy="name"
+                                [showClear]="true">
+                                <ng-template let-option pTemplate="item">
+                                    <p-tag 
+                                        [value]="option.value" 
+                                        [severity]="getSeverity(option.value)" />
+                                </ng-template>
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th>
+                    <p-columnFilter field="platform_name" matchMode="equals" [showMenu]="false">
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                            <p-dropdown 
+                                [ngModel]="value" 
+                                [options]="available_platforms"
+                                (onChange)="filter($event.value)" 
+                                placeholder="Select One"
+                                [filter]="true"
+                                filterBy="name"
+                                [showClear]="true">
+                                <ng-template let-option pTemplate="item">
+                                    <p-tag 
+                                        [value]="option.value" 
+                                        [severity]="getSeverity(option.value)" />
+                                </ng-template>
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th>
+                    <p-columnFilter field="frequency" matchMode="equals" [showMenu]="false">
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                            <p-dropdown 
+                                [ngModel]="value" 
+                                [options]="frequencies"
+                                (onChange)="filter($event.value)" 
+                                placeholder="Select One"
+                                [filter]="true"
+                                filterBy="label"
+                                [showClear]="true">
+                                    <ng-template let-option pTemplate="item">
+                                        <p-tag 
+                                            [value]="option.label" 
+                                            [severity]="getSeverity(option.label)" />
+                                    </ng-template>
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th>
+                    <p-columnFilter field="status" matchMode="equals" [showMenu]="false">
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                            <p-dropdown 
+                                [ngModel]="value" 
+                                [options]="statuses"
+                                (onChange)="filter($event.value)" 
+                                placeholder="Select One"
+                                [filter]="true"
+                                filterBy="value"
+                                [showClear]="true">
+                                    <ng-template let-option pTemplate="item">
+                                        <p-tag 
+                                            [value]="option.label"
+                                            [severity]="getSeverity(option.value)" />
+                                    </ng-template>
+                            </p-dropdown>
+                        </ng-template>
+                    </p-columnFilter>
+                </th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-schedule>
+            <tr>
+                <td>
+                    <p-tableCheckbox [value]="schedule" />
+                </td>
+                <td>
+                    {{ schedule.name }}
+                </td>
+                <td>
+                    {{ schedule.recipient_name }}
+                </td>
+                <td>
+                    {{ schedule.platform_name }}
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="getFrequencyByName(schedule.frequency)" 
+                        [severity]="getSeverity(schedule.frequency)" />
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="schedule.status | complete_status"
+                        [severity]="getSeverity(schedule.status)" />
+                </td>
+                <td>
+                    <p-button 
+                        icon="pi pi-eye" 
+                        class="mr-2" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        severity="success" 
+                        (onClick)="viewSchedule(schedule)" />
+                    <p-button
+                        *ngIf="schedule.status === 'scheduled'"
+                        icon="pi pi-power-off" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (onClick)="cancelSelectedSchedule(schedule)" />
+                    <p-button
+                        *ngIf="schedule.status === 'cancelled'"
+                        icon="pi pi-play" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (onClick)="restartSchedule(schedule)" />
+                    <p-button
+                        *ngIf="schedule.status === 'failed'"
+                        icon="pi pi-play" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (onClick)="restartSchedule(schedule)" />
+                    <p-button
+                        *ngIf="schedule.status === 'sent'"
+                        icon="pi pi-play" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (onClick)="restartSchedule(schedule)" />
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="summary">
+            <div class="flex align-items-center justify-content-between">
+                In total there are {{ schedules ? schedules.length : 0 }} schedules.
+            </div>
+        </ng-template>
     </p-table>
+
+    <p-dialog
+        [(visible)]="scheduleDialog" 
+        [style]="{ width: '450px' }" 
+        header="Schedule Details" 
+        [modal]="true" 
+        styleClass="p-fluid">
+            
+            <ng-template pTemplate="content">
+                <!--div class="spinner-overlay" *ngIf="dialogProgress">
+                    <p-progressSpinner ariaLabel="Saving"></p-progressSpinner>
+                </div-->
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.name" 
+                        disabled
+                    />
+                </div>
+
+                <div class="field">
+                    <label for="name">Status</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.status"
+                        disabled
+                    />
+                </div>
+
+                <div class="field">
+                    <label class="mb-3">Recipient</label>
+                    <div class="formgrid grid">
+                        <div class="field col">
+                            <input 
+                                type="text" 
+                                pInputText 
+                                id="rname" 
+                                [(ngModel)]="schedule.recipient_name" 
+                                disabled
+                            />
+                        </div>
+                        <div class="field col">
+                            <input 
+                                type="text" 
+                                pInputText
+                                id="rtype" 
+                                [(ngModel)]="schedule.recipient_type" 
+                                disabled
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label class="mb-3">Platform</label>
+                    <div class="formgrid grid">
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="platform1" 
+                                name="platform1" 
+                                value="whatsapp" 
+                                [(ngModel)]="schedule.platform_name"
+                                disabled
+                            />
+                            <label for="platform1">Whatsapp</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="platform2" 
+                                name="platform2" 
+                                value="telegram" 
+                                [(ngModel)]="schedule.platform_name"
+                                disabled
+                            />
+                            <label for="platform2">Telegram</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="platform3" 
+                                name="platform3" 
+                                value="messanger" 
+                                [(ngModel)]="schedule.platform_name"
+                                disabled
+                            />
+                            <label for="platform3">Messanger</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="platform4" 
+                                name="platform4" 
+                                value="insta" 
+                                [(ngModel)]="schedule.platform_name"
+                                disabled
+                            />
+                            <label for="platform4">Instagram</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="name">Created On</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.created_at" 
+                        disabled
+                    />
+                </div>
+
+                <div class="field">
+                    <label for="name">Next Schedule</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.scheduled_time"
+                        disabled
+                    />
+                </div>
+
+                <div class="field">
+                    <label for="name">Frequency</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.frequency" 
+                        disabled
+                    />
+                </div>
+
+                <div class="field">
+                    <label for="name">Created By</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="schedule.created_by" 
+                        disabled
+                    />
+                </div>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <p-button 
+                    label="Close" 
+                    icon="pi pi-times" 
+                    [text]="true"
+                    (onClick)="hideDialog()" />
+            </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog [style]="{ width: '450px' }" />
 </div>

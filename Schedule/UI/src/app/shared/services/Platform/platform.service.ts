@@ -26,8 +26,8 @@ export class PlatformService {
     return this.http.post(this.platformUrl.create, platform);
   }
 
-  updatePlatform(platformId: number, platform: any): Observable<any> {
-    return this.http.put(`${this.platformUrl.update}/${platformId}`, platform);
+  updatePlatform(platform: any): Observable<any> {
+    return this.http.put(`${this.platformUrl.update}`, platform);
   }
 
   deletePlatform(platformId: number): Observable<any> {

@@ -52,4 +52,13 @@ export class ScheduleService {
   deleteSchedule(scheduleId: number): Observable<any> {
     return this.http.delete(`${this.scheduleUrl.delete}/${scheduleId}`);
   }
+
+  restartSchedule(scheduleId: number) {
+    return this.http.put(`${this.scheduleUrl.restart}/${scheduleId}`, {});
+  }
+
+  getHistory(organization_id: number): Observable<any> {
+    const httpParams = new HttpParams().set('organization_id', organization_id.toString());
+    return this.http.get(this.scheduleUrl.history, {params: httpParams});
+  }
 }

@@ -23,15 +23,21 @@ export class ContactService {
     return this.http.get(this.contactUrl.fetch, {params : httpParam});
   }
 
-  createContact(payload: ContactModel): Observable<any> {
+  createContact(payload: any): Observable<any> {
     return this.http.post(this.contactUrl.create, payload);
   }
 
-  updateContact(contactId: number, contact: any): Observable<any> {
+  updateContact(contact: any): Observable<any> {
     return this.http.put(this.contactUrl.update, contact);
   }
 
   deleteContact(contactId: number): Observable<any> {
     return this.http.delete(`${this.contactUrl.delete}/${contactId}`);
+  }
+
+  bulkImport(organization_id: number, created_by: number, file: FormData): Observable<any> {
+    return this.http.post(
+      `${this.contactUrl.bulk_import}?organization_id=${organization_id}&created_by=${created_by}`,
+      file);
   }
 }

@@ -5,6 +5,7 @@ export interface OwnerSignup {
     user_type: string;
     organization: string;
     platform_name: string,
+    login_id: string,
     platform_login_credentials: string,
     password: string;
 }

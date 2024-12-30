@@ -7,6 +7,7 @@ import { ScheduleComponent } from './features/schedule/schedule.component';
 import { ComposeMessageComponent } from './features/schedule/compose-message/compose-message.component';
 import { CrudSchedulesComponent } from './features/schedule/crud-schedules/crud-schedules.component';
 import { UserProfileComponent } from './auth/user-profile/user-profile.component';
+import { ContactsComponent } from './features/contacts/contacts.component';
 
 @NgModule({
     imports: [
@@ -15,6 +16,7 @@ import { UserProfileComponent } from './auth/user-profile/user-profile.component
                 path: '', component: AppLayoutComponent,
                 children: [
                     { path: 'schedule',  component: ScheduleComponent},
+                    { path: 'contacts',  component: ContactsComponent},
                     { path: 'me', component: UserProfileComponent}
                 ]
             },

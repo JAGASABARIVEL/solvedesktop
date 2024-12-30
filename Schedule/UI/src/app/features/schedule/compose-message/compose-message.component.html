@@ -1,21 +1,28 @@
 <p-toast />
 
 <div class="grid">
+    <p-blockUI [blocked]="blockedDocument" />
     <div class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
-            <input
-            id="name"
-            type="text"
-            pInputText
-            [(ngModel)]="schedule_name"
-            class="w-full p-3"
-            (keyup)="onScheduleNameSelected()"
-        >
+            <p-floatLabel>
+                <input
+                    id="sname"
+                    type="text"
+                    pInputText
+                    [(ngModel)]="schedule_name"
+                    class="w-full p-3"
+                    placeholder=""
+                    (keyup)="onScheduleNameSelected()"
+                />
+                 <label *ngIf="schedule_name == undefined" for="sname">Schedule Name</label>
+            </p-floatLabel>
         </div>
     </div>
     <div *ngIf="schedule_name != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
+            <p-floatLabel>
                 <p-dropdown
+                    id="contact_type"
                     styleClass="w-full p-2"
                     [options]="contact_types"
                     [(ngModel)]="selected_contact_type"
@@ -23,33 +30,38 @@
                     [filter]="true"
                     filterBy="name"
                     [showClear]="true"
-                    placeholder="Select a Contact Type"
                     (onChange)="onContactTypeSelected()"
                     >
                 </p-dropdown>
+                <label for="contact_type">Recipient Type</label>
+            </p-floatLabel>
         </div>
     </div>
 
     <div *ngIf="selected_contact_type != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
-                <p-inputGroup>
+            <p-inputGroup>
+                <p-floatLabel>
                     <p-multiSelect
+                    id="contact_list"
                     styleClass="w-full p-2"
                     [options]="contacts" 
                     [(ngModel)]="selected_contacts" 
                     optionLabel="name" 
-                    [placeholder]="contact_list_placeholder"
                     (onChange)="onContactSelected()"
                     />
-                    <button type="button" pButton icon="pi pi-plus" (click)="add_new_contact()"></button>
-                </p-inputGroup>
+                    <label for="contact_list">{{contact_list_placeholder}}</label>
+                </p-floatLabel>
+                <button type="button" pButton icon="pi pi-plus" (click)="add_new_contact()"></button>
+            </p-inputGroup>
         </div>
     </div>
 
     <div *ngIf="selected_contacts != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
+            <p-floatLabel>
             <p-calendar
-            styleClass="w-full p-2"
+            styleClass="w-full p-1"
             [(ngModel)]="selected_date_time" 
             [showIcon]="true"
             [showTime]="true"
@@ -57,29 +69,36 @@
             [showOnFocus]="false"
             (onSelect)="onScheduleDateTimeSelected()"
             />
+            <label for="schedule_date">Schedule Date</label>
+        </p-floatLabel>
         </div>
     </div>
 
     <div *ngIf="selected_date_time != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
-            <p-dropdown
-            styleClass="w-full p-2"
-            [options]="frequency" 
-            [(ngModel)]="selected_frequency"
-            [filter]="true"
-            filterBy="label"
-            [showClear]="true"
-            optionLabel="label" 
-            placeholder="Frequency"
-            (onChange)="onFrequencySelected()"
-            >
-            </p-dropdown>
+            <p-floatLabel>
+                <p-dropdown
+                    id="frequency"
+                    styleClass="w-full p-2"
+                    [options]="frequency" 
+                    [(ngModel)]="selected_frequency"
+                    [filter]="true"
+                    filterBy="label"
+                    [showClear]="true"
+                    optionLabel="label" 
+                    (onChange)="onFrequencySelected()"
+                >
+                </p-dropdown>
+                <label for="frequency">Frequency</label>
+            </p-floatLabel>
         </div>
     </div>
 
     <div *ngIf="selected_date_time != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
+            <p-floatLabel>
             <p-multiSelect
+                id="platform"
                 styleClass="w-full p-2"
                 [options]="platform" 
                 [(ngModel)]="selected_platform" 
@@ -87,12 +106,16 @@
                 [placeholder]="contact_list_placeholder"
                 (onChange)="onPlatformSelected()"
                 />
+                <label for="platform">Platform</label>
+            </p-floatLabel>
         </div>
     </div>
 
     <div *ngIf="selected_platform != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
+            <p-floatLabel>
             <p-dropdown
+                id="datasource"
                 styleClass="w-full p-2"
                 [options]="datasource" 
                 [(ngModel)]="selected_datasource"
@@ -100,10 +123,11 @@
                 filterBy="name"
                 [showClear]="true"
                 optionLabel="name" 
-                placeholder="Select Data Source"
                 (onChange)="onDatasourceSelected()"
                 >
             </p-dropdown>
+                <label for="datasource">Data Source</label>
+            </p-floatLabel>
         </div>
     </div>
 
@@ -149,7 +173,7 @@
 
     <div *ngIf="selected_datasource != undefined" class="col-12 flex justify-content-end gap-2">
         <p-button (click)="onReset()" label="Reset" severity="secondary" (onClick)="add_contact_modal_visible = false" />
-        <p-button label="Schedule" (click)="onSchedule()" />
+        <p-button label="Schedule" (click)="onSchedule()" [loading]="blockedDocument" />
     </div>
 
 </div>

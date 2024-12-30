@@ -17,12 +17,16 @@ const FORGOT_PASSWORD_URI = "/forgot_password";
 // Mostly not needed since its users phone
 const FORGOT_USERNAME_URI = "/forgot_username";
 
+// Organization CRUD endpoints
+const ORGANIZATION_URI = "/organization";
+
 // Contact CRUD endpoints
 const CONTACT_URI = "/contacts";
 const CONTACT_CREATE_URI = "/contacts";
 const CONTACT_UPDATE_URI = "/contacts";
 const CONTACT_DELETE_URI = "/contacts";
 const CONTACT_FETCH_URI = "/contacts";
+const CONTACTS_BULK_IMPORT_URI = "/contacts/import";
 
 // Group CRUD endpoints
 const GROUP_URI = "/groups";
@@ -45,6 +49,8 @@ const SCHEDULE_CREATE_URI = "/schedule";
 const SCHEDULE_UPDATE_URI = "/schedule";
 const SCHEDULE_DELETE_URI = "/schedule";
 const SCHEDULE_FETCH_URI = "/schedule";
+const SCHEDULE_RESTART_URI = "/schedule/restart";
+const SCHEDULE_HISTORY_URI = "/schedule/history";
 
 export class Url {
     url = `${BASE_URL}${PORT}`;
@@ -68,6 +74,12 @@ export class AuthUrl extends Url {
     }
 }
 
+export class OrganizationUrl extends Url {
+    get base() {
+        return `${this.url}${ORGANIZATION_URI}`;
+    }
+}
+
 export class ContactUrl extends Url {
     get base() {
         return `${this.url}${CONTACT_URI}`;
@@ -87,6 +99,10 @@ export class ContactUrl extends Url {
 
     get fetch() {
         return `${this.url}${CONTACT_FETCH_URI}`;
+    }
+
+    get bulk_import() {
+        return `${this.url}${CONTACTS_BULK_IMPORT_URI}`;
     }
 }
 
@@ -158,8 +174,19 @@ export class ScheduleUrl extends Url {
     get fetch() {
         return `${this.url}${SCHEDULE_FETCH_URI}`;
     }
+
+    get restart() {
+        return `${this.url}${SCHEDULE_RESTART_URI}`;
+    }
+
+    get history() {
+        return `${this.url}${SCHEDULE_HISTORY_URI}`;
+    }
 }
 
+export const supported_platforms = [
+    {"name": "whatsapp"}
+]
 
 export const supported_contact_types = [
     {"name": "User", "value": "user"},
@@ -167,6 +194,7 @@ export const supported_contact_types = [
 ];
 
 export const supported_frequencies = [
+    {label: "NA", value: -1},
     {label: "Daily", value: 0},
     {label: "Weekly", value: 1},
     {label: "Monthly", value: 2},
@@ -174,6 +202,14 @@ export const supported_frequencies = [
     {label: "Half-Yearly", value: 4},
     {label: "Yearly", value: 5},
 ];
+
+export const supported_statuses = [
+    {label: "scheduled", value: "scheduled"},
+    {label: "in-progress", value: "in-progress"},
+    {label: "failed", value: "failed"},
+    {label: "cancelled", value: "cancelled"},
+    {label: "completed", value: "sent"},
+]
 
 export const supported_datasource = [
     {"name": "excel"}

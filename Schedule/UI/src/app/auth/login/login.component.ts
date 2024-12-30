@@ -12,6 +12,7 @@ import { LayoutService } from '../../layout/service/app.layout.service';
 import { Router } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
 import { LoginModel, LoginResponseModel } from './login.model';
+import { AvatarModule } from 'primeng/avatar';
 
 @Component({
   selector: 'app-login',
@@ -26,7 +27,8 @@ import { LoginModel, LoginResponseModel } from './login.model';
     PasswordModule,
     FloatLabelModule,
     DividerModule,
-    SkeletonModule
+    SkeletonModule,
+    AvatarModule
     
   ],
   templateUrl: './login.component.html',

@@ -14,6 +14,9 @@ import { LayoutService } from '../../layout/service/app.layout.service';
 import { AuthService } from '../../shared/services/auth/auth.service';
 import { Router } from '@angular/router';
 import { EmployeeSignup, OwnerSignup } from './signup.models';
+import { AvatarModule } from 'primeng/avatar';
+import { OrganizationService } from '../../shared/services/Organization/organization.service';
+import { supported_platforms } from '../../shared/services/constants';
 
 @Component({
   selector: 'app-signup',
@@ -29,7 +32,8 @@ import { EmployeeSignup, OwnerSignup } from './signup.models';
     FloatLabelModule,
     SelectButtonModule,
     DropdownModule,
-    SkeletonModule
+    SkeletonModule,
+    AvatarModule,
   ],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.css'
@@ -41,9 +45,7 @@ export class SignupComponent implements OnInit {
   selectedOrganization!: any;
   formGroup!: FormGroup;
   loading: boolean = false;
-  supported_platforms = [
-    {"name": "whatsapp"}
-  ]
+  platforms = supported_platforms;
   selected_platform: any = undefined;
   owner_signup_payload: OwnerSignup = undefined;
   employee_signup_payload: EmployeeSignup = undefined;
@@ -53,7 +55,8 @@ export class SignupComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private authService: AuthService,
-    public layoutService: LayoutService
+    public layoutService: LayoutService,
+    private organizationService: OrganizationService
 ) {
     this.formGroup = this.formBuilder.group({
         user_name: ['', [Validators.required]],
@@ -63,6 +66,7 @@ export class SignupComponent implements OnInit {
         user_organization: ['', [Validators.required]],
         user_platform: [''],
         user_platform_key: [''],
+        user_login_id: [''],
         user_password: ['', [Validators.required, Validators.minLength(8)]],
         user_confirm_password: ['', [Validators.required]]
     },
@@ -75,7 +79,6 @@ export class SignupComponent implements OnInit {
  passwordMatchValidator(formGroup: FormGroup): null {
   const password = formGroup.get('user_password');
   const confirmPassword = formGroup.get('user_confirm_password');
-
   if (password && confirmPassword) {
     if (password.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true }); // Set error on the specific control
@@ -83,7 +86,6 @@ export class SignupComponent implements OnInit {
       confirmPassword.setErrors(null); // Clear any existing errors
     }
   }
-
   return null; // No need to return errors at the form level
 }
   ngOnInit(): void {
@@ -91,19 +93,18 @@ export class SignupComponent implements OnInit {
       {label: 'Employee', value: 'EE'},
       {label: 'Owner', value: 'OR'},
     ]
+    this.loadOrganization();
+  }
 
-    this.organization = [
-        { name: 'Australia', code: 'AU' },
-        { name: 'Brazil', code: 'BR' },
-        { name: 'China', code: 'CN' },
-        { name: 'Egypt', code: 'EG' },
-        { name: 'France', code: 'FR' },
-        { name: 'Germany', code: 'DE' },
-        { name: 'India', code: 'IN' },
-        { name: 'Japan', code: 'JP' },
-        { name: 'Spain', code: 'ES' },
-        { name: 'United States', code: 'US' }
-    ];
+  loadOrganization() {
+    this.organizationService.fetch_all_organizations().subscribe(
+      (res) => {
+        this.organization = res;
+      },
+      (err) => {
+        console.log("Signup | Can not load organizations", err);
+      }
+    )
   }
 
   onRoleSelect(event: SelectButtonChangeEvent) {
@@ -124,6 +125,7 @@ signupButton() {
         "user_type": this.formGroup.value.user_role,
         "organization": this.formGroup.value.user_organization,
         "platform_name": this.formGroup.value.user_platform,
+        "login_id": this.formGroup.value.user_login_id,
         "platform_login_credentials": this.formGroup.value.user_platform_key,
         "password": this.formGroup.value.user_password
       }

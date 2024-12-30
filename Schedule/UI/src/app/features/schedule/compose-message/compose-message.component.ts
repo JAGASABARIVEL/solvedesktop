@@ -24,6 +24,8 @@ import { AddContactToGroupModel, CreateGroupMode } from '../../../shared/service
 import { PlatformService } from '../../../shared/services/Platform/platform.service';
 import { supported_contact_types, supported_frequencies, supported_datasource } from '../../../shared/services/constants';
 import { ComposeMessageModel, DataSourceModel } from './compose.model';
+import { ScheduleEventService } from '../../../shared/services/Events/schedule-events.service';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 
 
@@ -45,7 +47,8 @@ import { ComposeMessageModel, DataSourceModel } from './compose.model';
     ProgressBarModule,
     ToastModule,
     BadgeModule,
-    BlockUIModule
+    BlockUIModule,
+    ProgressSpinnerModule
   ],
   providers: [MessageService],
   templateUrl: './compose-message.component.html',
@@ -98,7 +101,8 @@ export class ComposeMessageComponent implements OnInit {
     private scheduleService: ScheduleService,
     private contactServive: ContactService,
     private groupService: GroupService,
-    private platforService: PlatformService
+    private platforService: PlatformService,
+    private scheduleEventService: ScheduleEventService
     ) {}
 
   ngOnInit(): void {
@@ -210,12 +214,12 @@ export class ComposeMessageComponent implements OnInit {
   onContactTypeSelected() {
     this.contacts = [];
     if (this.selected_contact_type?.name == "User") {
-      this.contact_list_placeholder = "Select list of users";
+      this.contact_list_placeholder = "Recipients";
       this.loadUserContacts();
 
     }
     else if (this.selected_contact_type?.name == "Group") {
-      this.contact_list_placeholder = "Select list of Groups";
+      this.contact_list_placeholder = "Groups";
       this.loadGroups();
     }
     else {
@@ -435,6 +439,7 @@ formatSize(bytes) {
     this.selected_platform = undefined;
     this.selected_datasource = undefined;
     this.message_text = undefined;
+    this.blockedDocument = false;
   }
 
   onSchedule() {
@@ -442,6 +447,8 @@ formatSize(bytes) {
     // reset the fileds
 
     this.blockedDocument = true;
+
+    
 
     let dataSourcePayload: DataSourceModel = {
       name: {
@@ -472,17 +479,17 @@ formatSize(bytes) {
             total_messages += 1;
             console.log("Compose Message | Schedule created ", res);
             if (total_messages == this.selected_contacts.length * this.selected_platform.length) {
-              this.blockedDocument = false;
               this.cd.markForCheck();
+              this.scheduleEventService.emitEvent("SCHEDULED");
               this.messageService.add({ severity: 'success', summary: 'Success', detail: 'All messages Scheduled' });
               this.onReset();
             }
           },
           (err) => {
-            this.blockedDocument = false;
+            total_messages += 1;
             this.cd.markForCheck();
             this.messageService.add( { severity: 'error', summary: 'Error', detail: 'Error scheduling some/all messages. Please contact support team'} );
-            return;
+            this.onReset();
           }
         )
       }

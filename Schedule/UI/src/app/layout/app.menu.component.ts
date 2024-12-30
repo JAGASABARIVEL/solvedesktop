@@ -27,6 +27,11 @@ export class AppMenuComponent implements OnInit {
                                 icon: 'pi pi-fw pi-calendar',
                                 routerLink: ['/schedule']
                             },
+                            {
+                                label: 'Manage Contacts',
+                                icon: 'pi pi-phone',
+                                routerLink: ['/contacts']
+                            },
                         ]
                     },
                 ]

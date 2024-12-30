@@ -19,10 +19,10 @@
                     <span class="font-bold white-space-nowrap m-0">
                         Schedules
                     </span>
-                    <p-badge value="2" />
+                    <p-badge *ngIf="total_schedules > 0" [value]="total_schedules" />
                 </div>
             </ng-template>
-            <app-crud-schedules></app-crud-schedules>
+            <app-crud-schedules (totalSchedules)="onTotalSchedulesHandler($event)"></app-crud-schedules>
         </p-tabPanel>
 
         <p-tabPanel header="Header III">
@@ -32,10 +32,11 @@
                     <span class="font-bold white-space-nowrap m-0">
                         Message History
                     </span>
-                    <p-badge value="1" />
+                    <p-badge *ngIf="failedMessageCounts > 0" [value]="failedMessageCounts" severity="danger" />
+                    <p-badge *ngIf="failedMessageCounts == 0" [value]="failedMessageCounts" />
                 </div>
-            </ng-template>
-            <app-message-history></app-message-history>
+            </ng-template>"
+            <app-message-history (onFailedMessage)="onFailedMessageHandler($event)"></app-message-history>
         </p-tabPanel>
 
 

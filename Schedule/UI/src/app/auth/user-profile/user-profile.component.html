@@ -1,106 +1,120 @@
 
-<h3 class="p-text-center">{{user.name}}</h3>
-<p-divider />
-        
-<div class="grid">
-    <div class="col-8">
-        <div class="flex justify-content-between">
-            <label for="email">Email</label>
-            <input
-              disabled
-              id="email"
-              type="text"
-              pInputText
-              [(ngModel)]="user.email"
-              placeholder="example@email.com"
-            />
+<p-toast />
+<div class="card">
+    <h3 class="p-text-center">{{user.name}}</h3>
+    <p-divider />
+            
+    <div class="grid">
+        <div class="col-8">
+            <div class="flex justify-content-between">
+                <label for="email">Email</label>
+                <input
+                  disabled
+                  id="email"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="user.email"
+                  placeholder="example@email.com"
+                />
+            </div>
+        </div>
+        <div class="col-8">
+            <div class="flex justify-content-between">
+                <label for="email">Phone</label>
+                <input
+                  disabled
+                  id="email"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="user.phone"
+                  placeholder="example@email.com"
+                />
+            </div>
+        </div>
+    
+        <div class="col-8">
+            <div class="flex justify-content-between">
+                <label for="email">Organization</label>
+                <input
+                  disabled
+                  id="email"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="user.organization"
+                  placeholder="example@email.com"
+                />
+            </div>
         </div>
     </div>
-    <div class="col-8">
-        <div class="flex justify-content-between">
-            <label for="email">Phone</label>
-            <input
-              disabled
-              id="email"
-              type="text"
-              pInputText
-              [(ngModel)]="user.phone"
-              placeholder="example@email.com"
-            />
+    <p-divider />
+    
+    
+    
+    
+    <div *ngIf="user.role == 'owner'" class="grid">
+        <div class="flex justify-content-between col-8">
+            <h4>Platforms</h4>
+            <button class="pi pi-plus" pButton (click)="showDialog()"></button>
         </div>
     </div>
 
-    <div class="col-8">
-        <div class="flex justify-content-between">
-            <label for="email">Organization</label>
-            <input
-              disabled
-              id="email"
-              type="text"
-              pInputText
-              [(ngModel)]="user.organization"
-              placeholder="example@email.com"
-            />
+    <div class="field" *ngIf="user.role == 'owner'">
+        <div class="formgrid grid" *ngFor="let platform of platforms">
+            <div class="field-radiobutton col-12">
+                <i *ngIf="platform.platform_name.startsWith('whatsapp')" class="pi pi-whatsapp mr-2"></i>
+                <label>{{platform.platform_name}}</label>
+            </div>
+            <div class="field-radiobutton col-6">
+                <input
+                  id="loginid"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="platform.login_id"
+                  placeholder="Login Id"
+                />
+            </div>
+            <div class="field-radiobutton col-6">
+                <input
+                  id="token"
+                  type="text"
+                  pInputText
+                  [(ngModel)]="platform.token"
+                  placeholder="Authentication Token"
+                />
+            </div>
         </div>
     </div>
-</div>
-<p-divider />
 
-
-
-
-<div *ngIf="user.role == 'owner'" class="grid">
-    <div class="flex justify-content-between col-8">
-        <h4>Platforms</h4>
-        <button class="pi pi-plus" pButton (click)="showDialog()"></button>
-    </div>
-    <div class="col-8" *ngFor="let platform of platforms">
-        <div class="flex justify-content-between">
-            <label for="email">
-                <i *ngIf="platform.name == 'Whatsapp'" class="pi pi-whatsapp mr-2"></i>
-                {{platform.name}}
-            </label>
-            <input
-              id="email"
-              type="text"
-              pInputText
-              [(ngModel)]="platform.token"
-              placeholder="Authentication Token"
-            />
-        </div>
-    </div>
-    <div class="col-8 flex justify-content-end">
-        <p-button label="Save"></p-button>
+    <div *ngIf="user.role == 'owner'" class="col-8 flex justify-content-end">
+        <p-button label="Save" (click)="onSave()"></p-button>
     </div>
     
+    <p-dialog header="Add Platform" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
+        <div class="flex align-items-center gap-3 mb-5">
+            <label for="platform" class="font-semibold w-6rem">Platform</label>
+            <p-dropdown
+                        styleClass="w-full p-2"
+                        [options]="supported_platforms"
+                        [(ngModel)]="selected_platform"
+                        optionLabel="name"
+                        [filter]="true"
+                        filterBy="name"
+                        [showClear]="true"
+                        placeholder="Select a platform"
+                        >
+            </p-dropdown>
+        </div>
+        <div class="flex align-items-center gap-3 mb-5">
+            <label for="login_id" class="font-semibold w-6rem">Login Id</label>
+            <input pInputText id="login_id" [(ngModel)]="new_platform.login_id" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex align-items-center gap-3 mb-5">
+            <label for="token" class="font-semibold w-6rem">Token</label>
+            <input pInputText id="token" [(ngModel)]="new_platform.token" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex justify-content-end gap-2">
+            <p-button label="Cancel" severity="secondary" (onClick)="visible = false" />
+            <p-button label="Save" (onClick)="onAddPlatform()" />
+        </div>
+    </p-dialog>
 </div>
-
-
-
-
-<p-dialog header="Add Profile" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
-    <span class="p-text-secondary block mb-5">Add new Platform</span>
-    <div class="flex align-items-center gap-3 mb-3">
-        <label for="platform" class="font-semibold w-6rem">Platform</label>
-        <p-dropdown
-                    styleClass="w-full p-2"
-                    [options]="supported_platforms"
-                    [(ngModel)]="selected_platform"
-                    optionLabel="name"
-                    [filter]="true"
-                    filterBy="name"
-                    [showClear]="true"
-                    placeholder="Select a platform"
-                    (onChange)="onPlatformSelected()"
-                    >
-                </p-dropdown>
-    </div>
-    <div class="flex align-items-center gap-3 mb-5">
-        <label for="token" class="font-semibold w-6rem">Token</label>
-        <input pInputText id="token" class="flex-auto" autocomplete="off" />
-    </div>
-    <div class="flex justify-content-end gap-2">
-        <p-button label="Cancel" severity="secondary" (onClick)="visible = false" />
-        <p-button label="Save" (onClick)="visible = false" />
-    </div>
-</p-dialog>

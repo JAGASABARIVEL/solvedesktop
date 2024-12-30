@@ -8,6 +8,8 @@ export interface ScheduleModel {
     message_body: string,
     created_by: UserModel,
     created_at: any,
+    scheduled_time: any,
+    status: string
 }
 
 export interface UserModel {

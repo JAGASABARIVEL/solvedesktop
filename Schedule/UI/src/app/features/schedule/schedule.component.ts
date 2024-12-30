@@ -6,11 +6,13 @@ import { CrudSchedulesComponent } from './crud-schedules/crud-schedules.componen
 import { UsageChargesComponent } from './usage-charges/usage-charges.component';
 import { MessageHistoryComponent } from './message-history/message-history.component';
 import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-schedule',
   standalone: true,
   imports: [
+    CommonModule,
     TabViewModule,
     BadgeModule,
 
@@ -23,6 +25,9 @@ import { Router } from '@angular/router';
 })
 export class ScheduleComponent implements OnInit {
 
+  failedMessageCounts: number = 0;
+  total_schedules: number = 0;
+
   constructor(private router: Router) {}
   ngOnInit(): void {
     const profile = JSON.parse(localStorage.getItem('me'));
@@ -30,6 +35,14 @@ export class ScheduleComponent implements OnInit {
     if (!profile) {
       this.router.navigate(['login']);
     }
+  }
+
+  onTotalSchedulesHandler(count: number) {
+    this.total_schedules = count;
+  }
+
+  onFailedMessageHandler(count: number) {
+    this.failedMessageCounts = count;
   }
 
 }

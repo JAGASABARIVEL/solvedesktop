@@ -10,7 +10,7 @@ import { HttpClientModule } from '@angular/common/http';
     imports: [
         HttpClientModule,
         AppRoutingModule,
-        AppLayoutModule,
+        AppLayoutModule
     ],
     providers: [
         { provide: LocationStrategy, useClass: PathLocationStrategy },
