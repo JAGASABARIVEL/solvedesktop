@@ -2,11 +2,11 @@
 
 <div class="grid">
 
-    <div class="col-4 flex align-items-center justify-content-center" >
+    <div style="position: fixed; top: 35%; left: 10%;" class="col" >
         <img src="assets/Icons/Schedule/bcast_logo.png" style="width: 400px; height: 200px;"  alt="logo">
     </div>
 
-    <div class="col-8 flex align-items-center justify-content-center">
+    <div style="position: relative; left: 30%; " class="col-8 flex align-items-center justify-content-center">
         
         <div class="flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
             <div class="flex flex-column align-items-center justify-content-center">
@@ -50,17 +50,17 @@
                             (onChange)="onRoleSelect($event)" />
                             </div>
         
-                            <p-floatLabel *ngIf="role_selected=='OR'">
-                                <input *ngIf="role_selected=='OR'" id="organizationor" type="text" pInputText controllername="user_organization" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_organization">
+                            <p-floatLabel *ngIf="role_selected=='owner'">
+                                <input *ngIf="role_selected=='owner'" id="organizationor" type="text" pInputText controllername="user_organization" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_organization">
                                 <label for="organizationor">Organization</label>
                             </p-floatLabel>
                             
-                            <div class="mb-5">
-                              <p-floatLabel *ngIf="role_selected=='EE'">
+                            <div class="mb-5" *ngIf="role_selected=='employee'">
+                              <p-floatLabel *ngIf="role_selected=='employee'">
                                 <p-dropdown 
                                   id="organizationee"
                                   styleClass="w-full md:w-30rem p-2"
-                                  *ngIf="role_selected=='EE'"
+                                  *ngIf="role_selected=='employee'"
                                   [options]="organization"
                                   [(ngModel)]="selectedOrganization"
                                   formControlName="user_organization"
@@ -79,7 +79,7 @@
                                 <p-dropdown 
                                     id="platform"
                                     styleClass="w-full md:w-30rem p-2"
-                                    *ngIf="role_selected=='OR'"
+                                    *ngIf="role_selected=='owner'"
                                     [options]="platforms"
                                     [(ngModel)]="selected_platform"
                                     formControlName="user_platform"
@@ -89,18 +89,18 @@
                                     [showClear]="true"
                                     >
                                 </p-dropdown>
-                                <label *ngIf="role_selected=='OR'" for="platform">Platform</label>
+                                <label *ngIf="role_selected=='owner'" for="platform">Platform</label>
                             </p-floatLabel>
                         </div>
                         
         
-                        <p-floatLabel *ngIf="role_selected=='OR'">
-                            <input *ngIf="role_selected=='OR'" id="login_id" type="text" pInputText controllername="user_login_id" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_login_id">
+                        <p-floatLabel *ngIf="role_selected=='owner'">
+                            <input *ngIf="role_selected=='owner'" id="login_id" type="text" pInputText controllername="user_login_id" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_login_id">
                             <label for="login_id">Login ID</label>
                         </p-floatLabel>
                         
-                        <p-floatLabel *ngIf="role_selected=='OR'">
-                            <input *ngIf="role_selected=='OR'" id="platform_key" type="text" pInputText controllername="user_platform_key" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_platform_key">
+                        <p-floatLabel *ngIf="role_selected=='owner'">
+                            <input *ngIf="role_selected=='owner'" id="platform_key" type="text" pInputText controllername="user_platform_key" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_platform_key">
                             <label for="platform_key">Platform Key</label>
                         </p-floatLabel>
         

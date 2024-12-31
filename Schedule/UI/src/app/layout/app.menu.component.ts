@@ -29,8 +29,13 @@ export class AppMenuComponent implements OnInit {
                             },
                             {
                                 label: 'Manage Contacts',
-                                icon: 'pi pi-phone',
+                                icon: 'pi pi-address-book',
                                 routerLink: ['/contacts']
+                            },
+                            {
+                                label: 'Chat',
+                                icon: 'pi pi-comment',
+                                routerLink: ['/chat']
                             },
                         ]
                     },

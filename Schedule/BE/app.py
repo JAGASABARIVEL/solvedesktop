@@ -47,8 +47,12 @@ def create_app():
         db.create_all()
         CORS(app, resources={r"/*": {"origins": "*"}})
         Session = sessionmaker(bind=db.engine)
-        schedule_endpoint.init_endpoint(app_context, app, Session)
+        
+        print("Init message endpoint")
         message_endpoint.init_endpoint(app_context, app, Session)
+
+        print("Init schedule endpoint")
+        schedule_endpoint.init_endpoint(app_context, app, Session)
 
         @app.route('/ping', methods=["GET"])
         def ping_main_server():

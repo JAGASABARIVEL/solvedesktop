@@ -52,6 +52,11 @@ const SCHEDULE_FETCH_URI = "/schedule";
 const SCHEDULE_RESTART_URI = "/schedule/restart";
 const SCHEDULE_HISTORY_URI = "/schedule/history";
 
+// Conversation
+const CHAT_URI = "/chat";
+const CONVERSATIONS_URI = "/conversations";
+const CONVERSATION_UNASSIGNED_URI = "";
+
 export class Url {
     url = `${BASE_URL}${PORT}`;
 }
@@ -181,6 +186,12 @@ export class ScheduleUrl extends Url {
 
     get history() {
         return `${this.url}${SCHEDULE_HISTORY_URI}`;
+    }
+}
+
+export class ConversationUrl extends Url {
+    get base() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}`;
     }
 }
 

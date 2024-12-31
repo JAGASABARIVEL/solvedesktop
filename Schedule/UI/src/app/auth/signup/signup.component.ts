@@ -90,8 +90,8 @@ export class SignupComponent implements OnInit {
 }
   ngOnInit(): void {
     this.roles = [
-      {label: 'Employee', value: 'EE'},
-      {label: 'Owner', value: 'OR'},
+      {label: 'Employee', value: 'employee'},
+      {label: 'Owner', value: 'owner'},
     ]
     this.loadOrganization();
   }
@@ -117,21 +117,21 @@ export class SignupComponent implements OnInit {
 signupButton() {
     let payload = undefined;
     this.loading = true;
-    if (this.role_selected == "OR") {
+    if (this.role_selected == "owner") {
       this.owner_signup_payload = {
         "name": this.formGroup.value.user_name,
         "phone": this.formGroup.value.user_phone,
         "email": this.formGroup.value.user_email,
         "user_type": this.formGroup.value.user_role,
         "organization": this.formGroup.value.user_organization,
-        "platform_name": this.formGroup.value.user_platform,
+        "platform_name": this.formGroup.value.user_platform.name,
         "login_id": this.formGroup.value.user_login_id,
         "platform_login_credentials": this.formGroup.value.user_platform_key,
         "password": this.formGroup.value.user_password
       }
       payload = this.owner_signup_payload;
     }
-    else if(this.role_selected == "EE") {
+    else if(this.role_selected == "employee") {
       this.employee_signup_payload = {
         "name": this.formGroup.value.user_name,
         "phone": this.formGroup.value.user_phone,

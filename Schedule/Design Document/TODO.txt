@@ -1,0 +1,32 @@
+Schedule Fixed:
+===============
+P0
+--
+14. Unsubscribe the subscribed services - P0
+10. Fix object in organization - P0
+8. Add labels to signup, login, compose forms - P0
+9. Change the excel header from 'Phone' to 'phone' for consistency - P0
+11. Change the schedule enpoint with prefix '/schedule' for consistency across service(s) - P0
+12. Add error details for signup/login page - P0
+1. Learn why we need to add service in provider list though its injected in constructor - P0
+2. Add avatar in login / signup page instead of photo - P0
+
+P1
+--
+3. Implement "validate user authentication logic" for all endpoint - P1
+4. Add contact and Group tabs toi manage contacts - P1
+5. Add a disabled feature in send button in compose so that user do not click multiple time - P0
+6. Cleanup the uploaded_files - P0
+7. Querry the webhook server and update the delivery status
+13. We should logout user based on session timing or databaselook up since empty DB sometime login users
+    - This would get resolved once we have authorization from server instead of localstorage as cached login after login process.
+
+
+Admin Document:
+===============
+1. Excel shouldf be text fiormat
+2. Number must include country code (91) for India
+
+Tool Enhancements:
+==================
+1. Migrate confluent-kafka for perfomance in future

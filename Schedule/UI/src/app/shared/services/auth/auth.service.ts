@@ -21,7 +21,7 @@ export class AuthService {
   }
 
   signup(payload: any): Observable<any> {
-    return (payload?.user_type == "OR") ? this.signupAsOwner(payload) : this.signupAsEmployee(payload);
+    return (payload?.user_type === "owner") ? this.signupAsOwner(payload) : this.signupAsEmployee(payload);
   }
 
   signupAsOwner(payload: OwnerSignup): Observable<any> {

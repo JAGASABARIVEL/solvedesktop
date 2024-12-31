@@ -235,7 +235,7 @@ def init_endpoint(app_context, app, Session):
                                 platform = Platform(
                                     owner_id=owner_account.id,
                                     platform_name=data['platform_name'],
-                                    login_id=data['platform_login_id'],
+                                    login_id=data['login_id'],
                                     login_credentials=data['platform_login_credentials']
                                 )
                                 session.add(platform)
@@ -596,7 +596,7 @@ def init_endpoint(app_context, app, Session):
                                 continue
                             contact_data = dict(zip(sheet_columns, row))
                             print("contact_data ", contact_data)
-                            contact = session.query(Contact).filter_by(phone=contact_data['contact'], organization_id=organization_id).first()
+                            contact = session.query(Contact).filter_by(phone=contact_data['phone'], organization_id=organization_id).first()
                             if contact:
                                 continue
                             contact = Contact(

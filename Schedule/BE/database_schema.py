@@ -81,16 +81,15 @@ class User(db.Model):
 class Contact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(256), nullable=False)
-    description = db.Column(db.String(4096), nullable=False)
-    image = db.Column(db.String(2048), nullable=False)
-    address = db.Column(db.String(4096), nullable=False)
-    category = db.Column(db.String(256), nullable=False)
+    description = db.Column(db.String(4096), nullable=True)
+    image = db.Column(db.String(2048), nullable=True)
+    address = db.Column(db.String(4096), nullable=True)
+    category = db.Column(db.String(256), nullable=True)
     phone = db.Column(db.String(256), unique=True, nullable=False)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    last_interaction = db.Column(db.DateTime, nullable=True)  # Timestamp of last message interaction
     # Relationships for convenience
     creator = db.relationship('User', back_populates='contacts')
     organization = db.relationship('Organization', back_populates='contacts')
@@ -151,18 +150,43 @@ class ScheduledMessage(db.Model):
         UniqueConstraint('name', 'organization_id', name='unique_name_per_organization'),
     )
 
-class IncomingMessageLog(db.Model):
+# Conversation model
+class Conversation(db.Model):
+    __tablename__ = 'conversation'
     id = db.Column(db.Integer, primary_key=True)
-    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id', ondelete='CASCADE'), nullable=False)
+    assigned_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id', ondelete='CASCADE'), nullable=False)
+    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    status = db.Column(db.String(20), default='active')  # 'active', 'closed'
+
+class IncomingMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id', ondelete='CASCADE'), nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
+    platform_id = db.Column(db.Integer, db.ForeignKey('platform.id', ondelete='CASCADE'), nullable=False)
+    contact_id = db.Column(db.Integer, db.ForeignKey('contact.id', ondelete='CASCADE'), nullable=False)
+    message_body = db.Column(db.Text, nullable=False)
+    received_time = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), nullable=False, default='unread')  # 'unread', 'read', 'responded'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class UserMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id', ondelete='CASCADE'), nullable=False)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
+    platform_id = db.Column(db.Integer, db.ForeignKey('platform.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    message_body = db.Column(db.Text, nullable=False)
+    sent_time = db.Column(db.DateTime, default=datetime.utcnow)
+    # TODO: This would be helpful if the message actually sent from watsapp server(webhook notification)
+    status = db.Column(db.String(50), nullable=True)
 
 class MessageResponseLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id', ondelete='CASCADE'), nullable=False)
     incoming_message_id = db.Column(db.Integer, db.ForeignKey('incoming_message.id', ondelete='CASCADE'), nullable=False)
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)

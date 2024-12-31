@@ -8,6 +8,7 @@ import { ComposeMessageComponent } from './features/schedule/compose-message/com
 import { CrudSchedulesComponent } from './features/schedule/crud-schedules/crud-schedules.component';
 import { UserProfileComponent } from './auth/user-profile/user-profile.component';
 import { ContactsComponent } from './features/contacts/contacts.component';
+import { ChatComponent } from './features/chat/chat.component';
 
 @NgModule({
     imports: [
@@ -15,9 +16,10 @@ import { ContactsComponent } from './features/contacts/contacts.component';
             {
                 path: '', component: AppLayoutComponent,
                 children: [
-                    { path: 'schedule',  component: ScheduleComponent},
-                    { path: 'contacts',  component: ContactsComponent},
-                    { path: 'me', component: UserProfileComponent}
+                    { path: 'schedule', loadComponent: () => import('./features/schedule/schedule.component').then(m => m.ScheduleComponent) },
+                    { path: 'contacts', loadComponent: () => import('./features/contacts/contacts.component').then(m => m.ContactsComponent) },
+                    { path: 'chat', loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent) },
+                    { path: 'me', loadComponent: () => import('./auth/user-profile/user-profile.component').then(m => m.UserProfileComponent) },
                 ]
             },
             { path: 'login', component: LoginComponent },
