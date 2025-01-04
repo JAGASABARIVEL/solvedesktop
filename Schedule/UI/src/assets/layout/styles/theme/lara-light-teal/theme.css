@@ -4056,6 +4056,7 @@
     margin-bottom: 4px;
   }
 
+  /**
   .p-card {
     background: #ffffff;
     color: #4b5563;
@@ -4080,7 +4081,7 @@
   }
   .p-card .p-card-footer {
     padding: 1.25rem 0 0 0;
-  }
+  }*/
 
   .p-divider .p-divider-content {
     background-color: #ffffff;

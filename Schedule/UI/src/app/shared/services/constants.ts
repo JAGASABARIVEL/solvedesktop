@@ -55,6 +55,10 @@ const SCHEDULE_HISTORY_URI = "/schedule/history";
 // Conversation
 const CHAT_URI = "/chat";
 const CONVERSATIONS_URI = "/conversations";
+const CONVERSATION_RESPOND = "/respond"
+const CONVERSATION_ASSIGN = "/assign"
+const CONVERSATION_CLOSE = "/close"
+const CONVERSATION_OPEN = "/new"
 const CONVERSATION_UNASSIGNED_URI = "";
 
 export class Url {
@@ -135,6 +139,10 @@ export class GroupUrl extends Url {
     get addMembers() {
         return `${this.url}${GROUP_URI}${GROUP_ADD_MEMBERS}`;
     }
+
+    get patchGroupDetails() {
+        return `${this.url}${GROUP_URI}`;
+    }
 }
 
 export class PlatformUrl extends Url {
@@ -192,6 +200,22 @@ export class ScheduleUrl extends Url {
 export class ConversationUrl extends Url {
     get base() {
         return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}`;
+    }
+
+    get respond() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_RESPOND}`;
+    }
+
+    get assign() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_ASSIGN}`
+    }
+
+    get close() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_CLOSE}`
+    }
+
+    get new() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_OPEN}`
     }
 }
 

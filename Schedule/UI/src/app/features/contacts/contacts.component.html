@@ -23,6 +23,7 @@
                     <p-badge [value]="total_groups" />
                 </div>
             </ng-template>
+            <app-groups (totalGroups)="onTotalGroupsHandler($event)"></app-groups>
         </p-tabPanel>
 
     </p-tabView>

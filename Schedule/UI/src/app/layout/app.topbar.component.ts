@@ -3,10 +3,17 @@ import { Router } from '@angular/router';
 import { MenuItem } from 'primeng/api';
 
 import { LayoutService } from "./service/app.layout.service";
+import { SplitButtonModule } from 'primeng/splitbutton';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-topbar',
     templateUrl: './app.topbar.component.html',
+    standalone: true,
+    imports: [
+        CommonModule,
+        SplitButtonModule
+    ]
 
 })
 export class AppTopBarComponent {

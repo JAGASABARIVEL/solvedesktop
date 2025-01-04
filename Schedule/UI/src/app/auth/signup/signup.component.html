@@ -2,12 +2,11 @@
 
 <div class="grid">
 
-    <div style="position: fixed; top: 35%; left: 10%;" class="col" >
+    <div style="position: absolute; top: 35%; left: 10%;" class="col" >
         <img src="assets/Icons/Schedule/bcast_logo.png" style="width: 400px; height: 200px;"  alt="logo">
     </div>
 
     <div style="position: relative; left: 30%; " class="col-8 flex align-items-center justify-content-center">
-        
         <div class="flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
             <div class="flex flex-column align-items-center justify-content-center">
                 <div style="border-radius:56px; padding:0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
@@ -16,8 +15,7 @@
                             <p-avatar
                                 icon="pi pi-user"
                                 styleClass="mr-2"
-                                size="xlarge"
-                                shape="circle"
+                                size="large"
                             />
                             <!--div class="text-900 text-3xl font-medium mb-3">Welcome!</div-->
                             <br><br>
@@ -41,7 +39,7 @@
                             </p-floatLabel>
                             
                             <div class="">
-                                <p-selectButton styleClass="block w-full md:w-30rem p-2 mb-5"
+                                <p-selectButton styleClass="block w-full p-2 mb-5"
                                 if="role"
                             [options]="roles" 
                             formControlName="user_role"

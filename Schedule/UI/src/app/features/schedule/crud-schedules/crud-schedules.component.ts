@@ -20,6 +20,8 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { StatusPipe } from '../../../shared/pipes/status.pipe';
 
@@ -30,6 +32,7 @@ import { StatusPipe } from '../../../shared/pipes/status.pipe';
   imports: [
     CommonModule,
     FormsModule,
+  
     DialogModule,
     ConfirmDialogModule,
     ToastModule,
@@ -43,7 +46,10 @@ import { StatusPipe } from '../../../shared/pipes/status.pipe';
     MultiSelectModule,
     DropdownModule,
     RadioButtonModule,
-    StatusPipe
+    InputGroupModule,
+    InputGroupAddonModule,
+
+    StatusPipe,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './crud-schedules.component.html',
@@ -164,7 +170,7 @@ export class CrudSchedulesComponent implements OnInit, OnDestroy {
             return 'info';
         case 'Quarterly':
         case 'cancelled':
-            return 'warning';
+            return 'warn';
         case 'Yearly':
             return null;
     }

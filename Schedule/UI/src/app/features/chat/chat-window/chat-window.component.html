@@ -1,112 +1,189 @@
-<div class="card">
-	<div id="sidepanel">
-		<div id="profile" [class.expanded]="expanded">
-			<div class="wrap">
-				<img
-          id="profile-img"
-          (click)="expandStatuses = !expandStatuses"
-          [class]="activeUser.status"
-          [src]="activeUser.img"
-          alt=""
-        />
-				<p>{{activeUser.name}}</p>
-				<i
-          class="fa fa-chevron-down expand-button"
-          (click)="expanded = !expanded"
-          aria-hidden="true"
-        ></i>
-				<div id="status-options" [class.active]="expandStatuses">
-					<ul>
-						<li *ngFor="let item of (statuses | keyvalue)" [attr.id]="'status-'+item.value"
-							(click)="activeUser.status = item.value; expandStatuses=false"
-							[class.active]="item.value === activeUser.status" [class]="item.value">
-							<span class="status-circle"></span>
-							<p style="text-transform: capitalize;">{{item.value}}</p>
-						</li>
-					</ul>
-				</div>
-				<div id="expanded">
-					<ng-container *ngFor="let item of (activeUser?.social | json | keyvalue)">
-						<label for="twitter"
-              ><i
-                class="fa fa-fw"
-                [class]="'fa-'+item.key"
-                aria-hidden="true"
-              ></i
-            ></label>
-						<input [name]="item.key" type="text" [value]="item.value" />
-          </ng-container>
-				</div>
-			</div>
-		</div>
-		<div id="search">
-			<label for=""><i class="fa fa-search" aria-hidden="true"></i></label>
-			<input type="text" placeholder="Search contacts..." />
-    </div>
-			<div id="contacts" [class.expanded]="expanded">
-				<ul>
-					<li class="contact" *ngFor="let user of users" (click)="setUserActive(user)"
-						[class.active]="activeUser.id === user.id">
-						<div class="wrap">
-							<span class="contact-status" [class]="user.status"></span>
-							<img [src]="user.img" alt="" />
-							<div class="meta">
-								<p class="name">{{user.name}}</p>
-								<p class="preview">
-									{{user.messages[user.messages?.length - 1]?.message || ''}}
-								</p>
-							</div>
-						</div>
-					</li>
-				</ul>
-			</div>
-			<div id="bottom-bar">
-				<button id="addcontact">
-        <i class="fa fa-user-plus fa-fw" aria-hidden="true"></i>
-        <span>Add contact</span>
-      </button>
-				<button id="settings">
-        <i class="fa fa-cog fa-fw" aria-hidden="true"></i> <span>Settings</span>
-      </button>
-			</div>
-		</div>
+<p-toast></p-toast>
+<p-confirmpopup />
 
-		<div class="content">
-			<div class="contact-profile">
-				<img [src]="activeUser.img" alt="" />
-				<p>{{activeUser.name}}</p>
-				<div class="social-media">
-					<i class="fa fa-facebook" aria-hidden="true"></i>
-					<i class="fa fa-twitter" aria-hidden="true"></i>
-					<i class="fa fa-instagram" aria-hidden="true"></i>
-				</div>
-			</div>
-            <div class="messages" #scrollMe>
-				<ul>
-					<li [class]="msg.type" *ngFor="let msg of activeUser?.messages">
-						<img [src]="msg.type === 'customer' ? activeUser.img : messageReceivedFrom.img" alt="" />
-						<p>{{msg?.message_body || ''}}</p>
-					</li>
-				</ul>
-			</div>
-			<div class="message-input">
-				<div class="wrap">
-					<input
-          type="text"
-          #msgInput
-          placeholder="Write your message..."
-          (keyup.enter)="addNewMessage(msgInput)"/>
-                    <p-button
-                      icon="pi pi-paperclip"
-                      class="mr-2"
-                      (click)="addNewMessage(msgInput)">
-                    </p-button>
-					<p-button
-                      icon="pi pi-send"
-                      (click)="addNewMessage(msgInput)"
-                    >
-                    </p-button>
-				</div>
-			</div>
+<p-dialog header="Close Conversation" [modal]="true" [(visible)]="closeConversationVisible" [style]="{ width: '25rem' }">
+        <span class="p-text-secondary block mb-2">Reason for closing the conversation.</span>
+        <div class="flex items-center mb-4">
+            <input pInputText id="username" class="flex-auto" [(ngModel)]="closedReason" autocomplete="off" />
+        </div>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" (click)="closedReason = ''; closeConversationVisible = false" />
+            <p-button label="Save" (click)="onClosedReasonSave()"/>
+        </div>
+</p-dialog>
+
+<div *ngIf="activeUser?.phone" class="whatsapp-container">
+	<!-- Sidebar -->
+	<div class="sidebar">
+	  <!-- Profile Section -->
+	  <div class="profile">
+		<div class="profile-info">
+		  <!--img [src]="activeUser.img" alt="Your Profile" class="profile-img" /-->
+		  <p-avatar label="{{ profile.name | slice:0:1 }}"
+		  size="large" 
+		  styleClass="mr-2"></p-avatar>
+		  <div class="profile-text">
+			<p class="profile-name">{{ profile.name }}</p>
+			<p class="profile-username">{{ profile.email }}</p>
+		  </div>
 		</div>
+		<div class="icons">
+		</div>
+	  </div>
+  
+	  <!-- Search Contacts -->
+	  <div class="search">
+		<span class="pi pi-search"></span>
+		<input type="text" placeholder="Search or start new chat" class="search-input" [(ngModel)]="searchQuery" (input)="filterContacts()">
+	  </div>
+	  <!-- Contact List -->
+<div class="contacts">
+	<ng-container *ngFor="let user of filteredUsers; let i = index;">
+	  <p-card 
+		[ngStyle] = "{
+			'cursor': 'pointer',
+        }"
+		(click)="setUserActive(user)"
+	  >
+		<div class="wrap">
+		  <!--img [src]="user.img" alt="User Image" class="user-img" /-->
+		  <p-avatar label="{{user.name | slice:0:1}}" size="large">
+		  </p-avatar>
+		  <div class="meta">
+			<p class="name">{{ user.name }}</p>
+			<p *ngIf="user?.name === ''" class="name">{{ user?.phone }}</p>
+			<p class="preview">
+			  {{ user.messages[user.messages?.length - 1]?.message_body || '' }}
+			</p>
+		  </div>
+		  <div class="time-container">
+			<div class="time" *ngIf="user.messages[user.messages?.length - 1]?.received_time">
+			  {{ user.messages[user.messages?.length - 1]?.received_time | date:'shortTime' }}
+			</div>
+			<div class="time" *ngIf="user.messages[user.messages?.length - 1]?.sent_time">
+			  {{ user.messages[user.messages?.length - 1]?.sent_time | date:'shortTime' }}
+			</div>
+			<!-- New Message Badge (Positioned at the bottom) -->
+			<p-badge *ngIf="getUnreadCount(user.messages) > 0" 
+				[value]="getUnreadCount(user.messages)" 
+				class="unread-badge">
+			</p-badge>
+		  </div>
+		</div>
+		<div class="flex justify-content-end mt-2">
+			<p-badge *ngIf="user.status === 'closed'" 
+			    [value]="'closed'"
+				[severity]="'danger'"
+			    class="unread-badge mr-2">
+			</p-badge>
+			<p-badge *ngIf="user.id === activeUser.id" 
+			    [value]="'active'"
+				[severity]="'warn'"
+			    class="unread-badge">
+			</p-badge>
+		</div>
+	  </p-card>
+	  <br>
+	</ng-container>
+  </div>
 	</div>
+  
+	<!-- Chat Section -->
+	<div class="content">
+	  <!-- Contact Profile -->
+	  <div class="contact-profile">
+		<!--img [src]="activeUser?.img" alt="User Image" class="user-img" /-->
+		<p-avatar
+			  label="{{activeUser.name | slice:0:1}}" size="large" 
+		      styleClass="mr-2 ml-2">
+		</p-avatar>
+		<div class="user-info">
+		  <p *ngIf="activeUser?.name" class="user-name">{{ activeUser?.name }}</p>
+		  <p *ngIf="activeUser?.name === ''" class="user-name">{{ activeUser?.phone }}</p>
+		  <i class="pi pi-whatsapp whatsapp-icon"></i>
+		</div>
+		
+		<p-dropdown
+		  *ngIf="activeUser.status === 'org_new'"
+		  class="mr-2"
+		  [options]="platform"
+		  [(ngModel)]="selected_platform"
+		  optionLabel="platform_name"
+		  placeholder="Select platform"
+		  (onChange)="onPlatformSelected()"
+		>
+		</p-dropdown>
+		<p-button [disabled]="this.selected_platform === undefined" *ngIf="activeUser.status === 'org_new'" label="Open" icon="pi pi-lock-open" class="mr-2" (click)="newConversation()"></p-button>
+
+		<p-button *ngIf="activeUser.status !== 'org_new' && activeUser.status !== 'closed'" label="History" icon="pi pi-sync" class="mr-2" (click)="loadHistoricalConversation()"></p-button>
+		<p-button *ngIf="!isWorkedBySomeone && activeUser.status !=='new' && activeUser.status !== 'org_new' && activeUser.status !== 'closed'" icon="pi pi-lock" label="Close" (click)="closeConversation()"></p-button>
+		<p-button *ngIf="activeUser.status ==='new'" icon="pi pi-briefcase" label="Assign" (click)="confirmAssignment($event)"></p-button>
+		<p-button *ngIf="activeUser.status !=='new' && isWorkedBySomeone" icon="pi pi-briefcase" label="Re-assign" (click)="confirmReAssignment($event)"></p-button>
+	  </div>
+  
+	  <!-- Messages Section -->
+	  <div class="messages" #scrollMe>
+		<ul>
+		  <li *ngFor="let msg of activeUser?.messages" [ngClass]="msg.type">
+			<div style="width: 80%" *ngIf="msg.type === 'start_tag' || msg.type === 'end_tag'" class="status-marker">
+				<div *ngIf="msg.type === 'start_tag'" class="open-line"></div>
+				<div *ngIf="msg.type === 'end_tag'" class="closed-line"></div>
+
+				<span *ngIf="msg.type === 'start_tag'" class="open-text">
+				    Started by : {{ msg.by }} : {{ msg.reason || '' }}
+				</span>
+				<span *ngIf="msg.type === 'end_tag'" class="closed-text">
+					Closed by : {{ msg.by }} : {{ msg.reason || '' }}
+				  </span>
+				<div *ngIf="msg.type === 'start_tag'" class="open-line"></div>
+				<div *ngIf="msg.type === 'end_tag'" class="closed-line"></div>
+			  </div>
+
+
+			<p-avatar
+			  *ngIf="msg.type === 'customer'"
+			  label="{{activeUser.name | slice:0:1}}" size="large" 
+		      styleClass="mr-2 ml-2">
+		    </p-avatar>
+			<p-avatar
+			  *ngIf="msg.type !== 'customer' && msg.type !== 'start_tag' && msg.type !== 'end_tag'"
+			  label="{{profile.name | slice:0:1}}"
+			size="large" 
+		    styleClass="mr-2 ml-2"
+			>
+			</p-avatar>
+			<div *ngIf="msg.type !== 'start_tag' && msg.type !== 'end_tag'"  class="message-content">
+				<span *ngIf="msg.type !== 'customer'" class="sender-name" [style.color]="getEmployeeNameFromId(msg.sender)?.color">{{ getEmployeeNameFromId(msg.sender)?.name }}</span>
+				<p>{{ msg?.message_body || '' }}
+				    <span *ngIf="msg.sent_time" class="timestamp">{{ msg.sent_time | date:'shortTime' }}</span>
+				    <span *ngIf="msg.received_time" class="timestamp">{{ msg.received_time | date:'shortTime' }}</span>
+			    </p>
+			</div>
+		  </li>
+		</ul>
+	  </div>
+  
+	  <!-- Message Input -->
+	  <div *ngIf="activeUser.assignee === profile.id && activeUser.status !== 'org_new' && activeUser.status !== 'closed'" class="message-input">
+		<div class="wrap">
+		  <input 
+			type="text" 
+			#msgInput 
+			placeholder="Write your message..." 
+			(keyup.enter)="addNewMessage(msgInput)" />
+		  <p-button 
+			icon="pi pi-paperclip" 
+			class="icon-button" 
+			>
+		  </p-button>
+		  <p-button 
+			icon="pi pi-send" 
+			class="icon-button" 
+			(click)="addNewMessage(msgInput)">
+		  </p-button>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+

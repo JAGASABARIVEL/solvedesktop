@@ -15,13 +15,12 @@
                             <p-avatar
                                 icon="pi pi-user"
                                 styleClass="mr-2"
-                                size="xlarge"
-                                shape="circle"
+                                size="large"
                             />
                             <!--div class="text-900 text-3xl font-medium mb-3">Welcome!</div-->
                             <br><br>
-                            <span *ngIf="loading == true"  class="text-600 font-medium">Almost done while we are signing you in ...</span>
-                            <span *ngIf="loading != true" class="text-600 font-medium">Sign in to continue</span>
+                            <span *ngIf="loading === true"  class="text-600 font-medium">Almost done while we are signing you in ...</span>
+                            <span *ngIf="loading !== true" class="text-600 font-medium">Sign in to continue</span>
                         </div>
         
                         <form *ngIf="loading != true" [formGroup]="formGroup" (ngSubmit)="loginButton()">

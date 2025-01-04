@@ -29,7 +29,6 @@ import { AvatarModule } from 'primeng/avatar';
     DividerModule,
     SkeletonModule,
     AvatarModule
-    
   ],
   templateUrl: './login.component.html',
   styles: [`
@@ -75,7 +74,7 @@ export class LoginComponent {
                 this.saveUserDetails(res);
                 
                 this.loading = false;
-                this.router.navigate(['schedule']);
+                this.router.navigate(['']);
             },
             (err) => {
                 this.loading = false;

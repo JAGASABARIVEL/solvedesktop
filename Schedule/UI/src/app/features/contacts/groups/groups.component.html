@@ -1,0 +1,349 @@
+<p-dialog 
+    header="Add members" 
+    [modal]="true"
+    [(visible)]="add_members_modal_visible" 
+    [style]="{ width: '25rem' }"
+    >
+            <p-multiSelect
+            styleClass="flex w-full mb-5 p-2"
+            [options]="members_not_part_of_this_group"
+            [(ngModel)]="selected_contacts_for_creating_group" 
+            optionLabel="name"
+            appendTo="body"
+            [placeholder]="'Select members'" />
+
+    <div class="flex justify-content-end gap-2">
+        <p-button label="Cancel" severity="secondary" (onClick)="selected_contacts_for_creating_group=undefined; add_members_modal_visible=false;" />
+        <p-button label="Save" [disabled]="selected_contacts_for_creating_group === undefined || selected_contacts_for_creating_group?.length === 0" (onClick)="addMembers()" />
+    </div>
+</p-dialog>
+
+<div class="card">
+    <p-toast />
+    <p-toolbar styleClass="mb-4 gap-2">
+        <ng-template pTemplate="left">
+            <p-button
+                severity="success" 
+                label="New" 
+                icon="pi pi-plus" 
+                class="mr-2" 
+                (onClick)="openNew()" />
+            <p-button
+                severity="danger" 
+                label="Delete" 
+                icon="pi pi-trash" 
+                (onClick)="deleteSelectedProducts()" 
+                [disabled]="!selectedProducts || !selectedProducts.length" />
+        </ng-template>
+
+        <ng-template pTemplate="right">
+            <!--p-fileUpload
+                #fileUpload
+                mode="basic" 
+                accept=".xls,.xlsx"
+                [maxFileSize]="1000000" 
+                label="Import" 
+                chooseLabel="Import" 
+                class="mr-2 inline-block"
+                fileLimit="1"
+                (onSelect)="onBulkUpload($event, fileUpload)" /-->
+            <p-button
+                class="mr-2"
+                icon="pi pi-replay"
+                (onClick)="loadContactGroups()" />
+        </ng-template>
+    </p-toolbar>
+
+    <p-table
+        #dt
+        [value]="products"
+        [rows]="10"
+        [paginator]="true"
+        [globalFilterFields]="['name', 'phone', 'country.name', 'representative.name', 'status']"
+        [tableStyle]="{ 'min-width': '75rem' }"
+        [(selection)]="selectedProducts"
+        [rowHover]="true"
+        dataKey="id"
+        [loading]="loading"
+        [paginator]="true"
+        [paginatorPosition]="'bottom'"
+        [rowsPerPageOptions]="[5, 10, 20, 40, 80, 100]"
+        
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+        [showCurrentPageReport]="true"
+    >
+        <ng-template pTemplate="caption">
+            <div class="flex align-items-center justify-content-between">
+                <h5 class="m-0">Manage Groups</h5>
+                <span>
+                    <p-inputgroup>
+                        <p-inputgroup-addon>
+                            <i class="pi pi-search"></i>
+                        </p-inputgroup-addon>
+                        <input 
+                            styleClass="w-10"
+                            pInputText 
+                            type="text" 
+                            #searchInput 
+                            (input)="onSearchInput($event, dt)"
+                            placeholder="Search..."
+                        />
+                    </p-inputgroup>
+                </span>
+                
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+            <tr>
+                <th style="width: 4rem">
+                    <p-tableHeaderCheckbox />
+                </th>
+                
+                <th>
+                </th>
+                <th pSortableColumn="name">
+                    Name <p-sortIcon field="name" />
+                </th>
+                <th pSortableColumn="total">
+                    Members <p-sortIcon field="total" />
+                </th>
+                <th pSortableColumn="category">
+                    Category <p-sortIcon field="category" />
+                </th>
+                <th></th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-product>
+            <tr>
+                <td>
+                    <p-tableCheckbox [value]="product" />
+                </td>
+                
+                <td>
+                <!--img 
+                    [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" 
+                    [alt]="product.name" 
+                    width="50" 
+                    class="shadow-4" /-->
+                <p-avatar 
+                    icon="pi pi-users" 
+                    styleClass="mr-2" size="large" />
+                </td>
+                <td>
+                    {{ product.name }}
+                </td>
+                <td>
+                    {{ product.total }}
+                </td>
+                <td>
+                    <p-tag 
+                        [value]="product.category || 'N/A'" 
+                        [severity]="getSeverity(product.category)" />
+                </td>
+
+                <td>
+                    <p-button 
+                        icon="pi pi-pencil" 
+                        class="mr-2" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        severity="success" 
+                        (onClick)="editProduct(product)" />
+                    <p-button 
+                        icon="pi pi-trash" 
+                        severity="danger" 
+                        [rounded]="true" 
+                        [outlined]="true" 
+                        (onClick)="deleteProduct(product)" />
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="summary">
+            <div class="flex align-items-center justify-content-between">
+                In total there are {{ products ? products.length : 0 }} groups.
+            </div>
+        </ng-template>
+    </p-table>
+
+    <p-dialog
+        [(visible)]="productDialog" 
+        header="Group Details" 
+        [modal]="true" 
+        [maximizable]="true" 
+        [style]="{ width: '50rem' }" 
+        styleClass="p-fluid">
+            
+            <ng-template pTemplate="content">
+                <div class="spinner-overlay" *ngIf="dialogProgress">
+                    <p-progressSpinner ariaLabel="Saving"></p-progressSpinner>
+                </div>
+                <!--img 
+                    [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" 
+                    [alt]="product.image" 
+                    class="block m-auto pb-3" 
+                    *ngIf="product.image" / -->
+                <p-avatar 
+                    icon="pi pi-users"
+                    styleClass="w-2 h-2 mb-3" size="large"
+                />
+                
+                <div class="flex justify-content-between align-items-center mb-3">
+                    <label for="name">Name</label>
+                    <input 
+                        type="text" 
+                        pInputText 
+                        id="name" 
+                        [(ngModel)]="product.name" 
+                        required 
+                        (blur)="validateGroupName()"
+                        autofocus />
+                    <small class="p-error" *ngIf="submitted && !product.name">
+                        Name is required.
+                    </small>
+                </div>
+
+                <div class="flex justify-content-between align-items-center mb-3">
+                    <label for="description">Description</label>
+                    <textarea
+                        id="description" 
+                        pInputTextarea 
+                        [(ngModel)]="product.description" 
+                        required
+                        >
+                    </textarea>
+                </div>
+                <div class="field">
+                    <label class="mb-3">Category</label>
+                    <div class="formgrid grid">
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="category1" 
+                                name="category" 
+                                value="Individual" 
+                                [(ngModel)]="product.category" />
+                            <label for="category1">Individual</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="category2" 
+                                name="category" 
+                                value="Micro Enterprise" 
+                                [(ngModel)]="product.category" />
+                            <label for="category2">Micro Enterprise</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="category3" 
+                                name="category" 
+                                value="Small Enterprise" 
+                                [(ngModel)]="product.category" />
+                            <label for="category3">Small Enterprise</label>
+                        </div>
+                        <div class="field-radiobutton col-6">
+                            <p-radioButton 
+                                id="category4" 
+                                name="category" 
+                                value="Medium Enterprise" 
+                                [(ngModel)]="product.category" />
+                            <label for="category4">Medium Enterprise</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="formgrid grid">
+                    <div class="field col">
+                        <label for="name">Contact</label>
+                        <p-table
+                            #dt
+                            [value]="product.members"
+                            [rows]="10"
+                            [paginator]="true"
+                            [globalFilterFields]="['contact_name', 'contact_phone']"
+                            [tableStyle]="{ 'min-width': '48rem' }"
+                            [(selection)]="product.members"
+                            (selectionChange)="refreshMemebersContactList()"
+                            dataKey="contact_id"
+                            [rowHover]="true"
+                            [loading]="loading"
+                            currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+                            [showCurrentPageReport]="true"
+                        >
+                            <ng-template pTemplate="caption">
+                                <div class="flex align-items-center justify-content-end">
+                                    <p-button class="mr-2" icon="pi pi-user" label="Add Memebers" (click)="add_members_modal_visible=true;"></p-button>
+                                    <span>
+                                        <p-inputgroup>
+                                            <p-inputgroup-addon>
+                                                <i class="pi pi-search"></i>
+                                            </p-inputgroup-addon>
+                                            <input 
+                                                styleClass="w-8"
+                                                pInputText 
+                                                type="text" 
+                                                #searchInput 
+                                                (input)="onSearchMemeberInput($event, dt)"
+                                                placeholder="Search..."
+                                            />
+                                        </p-inputgroup>
+                                    </span>
+                                    
+                                </div>
+                            </ng-template>
+                            <ng-template pTemplate="header">
+                                <tr>
+                                    <th style="width: 4rem">
+                                        <p-tableHeaderCheckbox />
+                                    </th>
+                                    <th pSortableColumn="contact_name">
+                                        Name <p-sortIcon field="contact_name" />
+                                    </th>
+                                    <th pSortableColumn="contact_phone">
+                                        Phone <p-sortIcon field="contact_phone" />
+                                    </th>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="body" let-product>
+                                <tr>
+                                    <td>
+                                        <p-tableCheckbox [value]="product" />
+                                    </td>
+                                    <td>
+                                        {{ product.contact_name }}
+                                    </td>
+                                    <td>
+                                        {{ product.contact_phone }}
+                                    </td>
+                                </tr>
+                            </ng-template>
+                            <ng-template pTemplate="summary">
+                                <div class="flex align-items-center justify-content-between">
+                                    In total there are {{ product.members ? product.members.length : 0 }} members.
+                                </div>
+                            </ng-template>
+                        </p-table>
+                    </div>
+                    <div class="field col">
+                        
+                    </div>
+                </div>
+            </ng-template>
+
+            <ng-template pTemplate="footer">
+                <p-button 
+                    class="mt-5"
+                    label="Cancel" 
+                    icon="pi pi-times" 
+                    [text]="true"
+                    (onClick)="hideDialog()" />
+                <p-button
+                    class="mt-5"
+                    label="Save" 
+                    icon="pi pi-check" 
+                    [text]="true"
+                    [disabled]="!product.name"
+                    (onClick)="saveProduct()" />
+            </ng-template>
+    </p-dialog>
+
+    <p-confirmDialog [style]="{ width: '450px' }" />
+</div>

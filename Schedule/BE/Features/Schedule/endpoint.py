@@ -38,13 +38,17 @@ def init_endpoint(app_context, app, Session):
                     return jsonify({"error": str(e)}), 400
 
         @app.route('/organization/<int:id>', methods=['GET'])
+        @cross_origin()
         def get_organization(id):
             organization = Organization.query.get(id)
+            users = User.query.filter_by(organization_id=organization.id).all()
+            users = [{"id": user.id, "name": user.name, "phone": user.phone} for user in users]
             if organization:
                 return jsonify({
                     "id": organization.id,
                     "name": organization.name,
-                    "owner_id": organization.owner_id
+                    "owner_id": organization.owner_id,
+                    "employees": users
                 })
             return jsonify({"error": "Organization not found"}), 404
         
@@ -627,7 +631,8 @@ def init_endpoint(app_context, app, Session):
             # Get the query parameters
             organization_id = request.args.get('organization_id')
             page = request.args.get('page', type=int)
-            per_page = request.args.get('per_page', type=int, default=10)
+            # TODO: Handle paging from UI since 10k is very expensive
+            per_page = request.args.get('per_page', type=int, default=10000)
             if not organization_id:
                 return jsonify({"error" : "Organization ID is required"}), 400
             # Filter the contacts by organization_id
@@ -706,13 +711,30 @@ def init_endpoint(app_context, app, Session):
         @cross_origin()
         def create_group():
             data = request.json
-            group = ContactGroup.query.filter_by(name=data['name'], organization_id=data['organization_id']).first()
+            organization_id = data.get('organization_id')
+            created_by = data.get('created_by')
+            name = data.get('name')
+            description=data.get('description')
+            category=data.get('category')
+            if not organization_id:
+                return jsonify({"error": "Organization Id is required"}), 400
+            if not created_by:
+                return jsonify({"error": "Creator Id is required"}), 400
+            if not name:
+                return jsonify({"error": "Group Name is required"}), 400
+            group = ContactGroup.query.filter_by(name=name, organization_id=organization_id).first()
             if group:
                 return jsonify({"error": "Group with this name already existing"}), 409
             with Session() as session:
                 try:
         		    # TODO: Confirm if the group is already existing
-                    group = ContactGroup(name=data['name'], organization_id=data['organization_id'], created_by=data['created_by'])
+                    group = ContactGroup(
+                        name=name,
+                        organization_id=organization_id,
+                        created_by=created_by,
+                        description=description,
+                        category=category
+                    )
                     session.add(group)
                     session.commit()
                     return jsonify({"id": group.id}), 201
@@ -724,20 +746,80 @@ def init_endpoint(app_context, app, Session):
         def get_groups():
             # Get the query parameters
             organization_id = request.args.get('organization_id')
+            group_id = request.args.get('group_id')
             page = request.args.get('page', type=int)
-            per_page = request.args.get('per_page', type=int, default=10)
+            # TODO: Handle paging from UI since 10k is very expensive
+            per_page = request.args.get('per_page', type=int, default=10000)
             if not organization_id:
                 return jsonify({"error" : "Organization ID is required"}), 400
-            # Filter the contacts by organization_id
-            query = ContactGroup.query.filter_by(organization_id=organization_id)
-            # Check if pagination is needed
-            if page:
-                groups = query.paginate(page=page, per_page=per_page).items
-            else:
-                groups = query.all()  # Fetch all results if no pagination
-            # Format the results
-            result = [{"id": g.id, "name": g.name, "created_by": g.created_by} for g in groups]
-            return jsonify(result), 200
+            with Session() as session:
+                # Filter the contacts by organization_id
+                query = session.query(ContactGroup).filter_by(organization_id=organization_id)
+                if group_id:
+                    query = query.filter_by(id=group_id)
+                # Check if pagination is needed
+                if page:
+                    groups = query.paginate(page=page, per_page=per_page).items
+                else:
+                    groups = query.all()  # Fetch all results if no pagination
+                # Format the results
+                response = []
+                for g in groups:
+                    temp = {
+                        "id": g.id,
+                        "name": g.name,
+                        "organization_id": g.organization_id,
+                        "description": g.description,
+                        "category": g.category,
+                        "created_by": g.created_by,
+                    }
+                    members = session.query(GroupMember).filter_by(group_id=g.id, organization_id=organization_id).all()
+                    memebers_list = []
+                    for member in members:
+                        contact = session.query(Contact).filter_by(id=member.contact_id).first()
+                        memebers_list.append(
+                            {
+                            "id": member.id,
+                            "group_id": member.group_id,
+                            "organization_id": member.organization_id,
+                            "created_at": member.created_at.isoformat(),
+                            "contact_id": contact.id,
+                            "contact_name": contact.name,
+                            "contact_phone": contact.phone
+                            }
+                        )
+                    temp.update({"members": memebers_list})
+                    temp.update({"total": len(memebers_list)})
+                    response.append(temp)
+                return jsonify(response), 200
+
+        @app.route('/groups', methods=['PATCH'])
+        @cross_origin()
+        def patch_groups():
+            data = request.json
+            # Get the query parameters
+            organization_id = data.get('organization_id')
+            group_id = data.get('id')
+            if not organization_id:
+                return jsonify({"error" : "Organization ID is required"}), 400
+            if not group_id:
+                return jsonify({"error": "Group ID is required"}), 400
+            with Session() as session:
+                # Filter the contacts by organization_id
+                exiting_group_snapshot = session.query(ContactGroup).filter_by(id=group_id, organization_id=organization_id).first()
+                exiting_group_snapshot.name = data.get('name', exiting_group_snapshot.name)
+                exiting_group_snapshot.description = data.get('description', exiting_group_snapshot.description)
+                exiting_group_snapshot.category = data.get('category', exiting_group_snapshot.category)
+                session.commit()
+                members = session.query(GroupMember).filter_by(group_id=group_id, organization_id=organization_id).all()
+                existing_members_snapshot = {member.id for member in members}
+                new_members_snapshot = {member.get('id') if isinstance(member, dict) else member.id for member in data.get('members', members)}
+                members_to_be_removed = existing_members_snapshot - new_members_snapshot
+                for member_to_be_removed in members_to_be_removed:
+                    group_member = session.query(GroupMember).filter_by(id=member_to_be_removed).first()
+                    session.delete(group_member)
+                    session.commit()
+                return jsonify({"message": "Group patch successfull!"}), 200
 
         @app.route('/groups/<int:organization_id>', methods=['GET'])
         def get_group_id_from_group_name(organization_id):
@@ -799,14 +881,14 @@ def init_endpoint(app_context, app, Session):
                     # Check if the contact is already a member of the group
                     existing_member = GroupMember.query.filter_by(group_id=group_id, contact_id=contact_id, organization_id=organization_id).first()
                     if existing_member:
-                        return jsonify({"error": "Contact is already a member of the group"}), 400
+                        return jsonify({"member_id": existing_member.id}), 201
                     # Add the contact to the group
                     group_member = GroupMember(
                         group_id=group_id, organization_id=organization_id, contact_id=contact_id
                     )
                     session.add(group_member)
                     session.commit()
-                    return jsonify({"message": "Contact added to the group successfully!"}), 201
+                    return jsonify({"member_id": group_member.id}), 201
                 except Exception as e:
                     return jsonify({"error": str(e)}), 400
         

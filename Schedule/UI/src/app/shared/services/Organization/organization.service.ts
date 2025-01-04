@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { OrganizationUrl } from '../constants';
@@ -16,6 +16,10 @@ private organizationUrl: OrganizationUrl;
 
   fetch_all_organizations(): Observable<any> {
       return this.http.get(this.organizationUrl.base);
+  }
+
+  fetch_organization_by_id(id: any): Observable<any> {
+    return this.http.get(`${this.organizationUrl.base}/${id}`);
   }
 
 }

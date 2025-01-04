@@ -137,7 +137,7 @@ signupButton() {
         "phone": this.formGroup.value.user_phone,
         "email": this.formGroup.value.user_email,
         "user_type": this.formGroup.value.user_role,
-        "organization": this.formGroup.value.user_organization,
+        "organization": this.formGroup.value.user_organization?.name,
         "password": this.formGroup.value.user_password
       }
       payload = this.employee_signup_payload;

@@ -6,6 +6,7 @@ import { BadgeModule } from 'primeng/badge';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ContactComponent } from './contact/contact.component';
+import { GroupsComponent } from './groups/groups.component';
 
 @Component({
   selector: 'app-contacts',
@@ -15,7 +16,8 @@ import { ContactComponent } from './contact/contact.component';
     TabViewModule,
     BadgeModule,
 
-    ContactComponent
+    ContactComponent,
+    GroupsComponent
   ],
   providers: [],
   templateUrl: './contacts.component.html',

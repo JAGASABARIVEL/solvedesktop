@@ -10,7 +10,7 @@ import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { CommonModule } from '@angular/common';
 import { FileUploadModule } from 'primeng/fileupload';
 import { DropdownModule } from 'primeng/dropdown';
@@ -22,6 +22,8 @@ import { FormsModule } from '@angular/forms';
 import { ContactModel } from './contacts.model';
 import { ContactService } from '../../../shared/services/Contact/contact.service';
 import { Router } from '@angular/router';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 @Component({
   selector: 'app-contact',
@@ -36,14 +38,17 @@ import { Router } from '@angular/router';
     ToastModule,
     ToolbarModule,
     ConfirmDialogModule,
-    InputTextareaModule,
+    TextareaModule,
     FileUploadModule,
     DropdownModule,
     TagModule,
     RadioButtonModule,
     InputTextModule,
     AvatarModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+
+    InputGroupModule,
+    InputGroupAddonModule
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './contact.component.html',
@@ -249,7 +254,7 @@ export class ContactComponent {
         case 'Micro Enterprise':
             return 'success';
         case 'Small Enterprise':
-            return 'warning';
+            return 'warn';
         case 'Medium Enterprise':
             return 'danger';
     }

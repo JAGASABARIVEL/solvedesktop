@@ -12,7 +12,7 @@ import { EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
-import { MessageService, PrimeNGConfig} from 'primeng/api';
+import { MessageService } from 'primeng/api';
 import { BadgeModule } from 'primeng/badge';
 import { Router } from '@angular/router';
 import { BlockUIModule } from 'primeng/blockui';
@@ -26,6 +26,7 @@ import { supported_contact_types, supported_frequencies, supported_datasource } 
 import { ComposeMessageModel, DataSourceModel } from './compose.model';
 import { ScheduleEventService } from '../../../shared/services/Events/schedule-events.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { DatePickerModule } from 'primeng/datepicker';
 
 
 
@@ -41,7 +42,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
     ButtonModule,
     DialogModule,
     FloatLabelModule,
-    CalendarModule,
+    DatePickerModule,
     EditorModule,
     FileUploadModule,
     ProgressBarModule,
@@ -95,7 +96,6 @@ export class ComposeMessageComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private config: PrimeNGConfig,
     private cd: ChangeDetectorRef,
     private messageService: MessageService,
     private scheduleService: ScheduleService,
@@ -147,6 +147,21 @@ export class ComposeMessageComponent implements OnInit {
 
   }
 
+  onCancelNewContacts() {
+    this.new_contact = {
+      name: "",
+      phone: "",
+      organization_id: this.profile.organization,
+      created_by: this.profile.id
+    }
+    this.add_contact_modal_visible = false;
+  }
+
+  onCancelNewGroup() {
+    this.selected_contacts_for_creating_group === undefined;
+    this.create_group_modal_visible = false;
+  }
+
   onScheduleNameSelected() {
     if (this.schedule_name?.length == 0) {
       this.schedule_name = undefined;
@@ -191,6 +206,9 @@ export class ComposeMessageComponent implements OnInit {
   loadUserContacts() {
     this.contactServive.getContacts({"organization_id": this.profile.organization}).subscribe(
       (data) => {
+        data.forEach((individual_data)=> {
+          individual_data.name = individual_data.name === ''? individual_data.phone : individual_data.name;
+        });
         this.contacts = data;
         this.individual_contacts = data;
       },
@@ -314,17 +332,18 @@ uploadEvent(callback) {
     callback();
 }
 
-formatSize(bytes) {
-    const k = 1024;
-    const dm = 3;
-    const sizes = this.config.translation.fileSizeTypes;
-    if (bytes === 0) {
-        return `0 ${sizes[0]}`;
-    }
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    const formattedSize = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
-    return `${formattedSize} ${sizes[i]}`;
+formatSize(bytes: number): string {
+  if (bytes === 0) {
+      return '0 B';
+  }
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const k = 1024;
+  const dm = 2; // Decimal places
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const formattedSize = parseFloat((bytes / Math.pow(k, i)).toFixed(dm));
+  return `${formattedSize} ${sizes[i]}`;
 }
+
 
   add_individual_contacts() {
     this.add_contact_modal_visible = false;

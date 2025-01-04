@@ -34,12 +34,16 @@ export class GroupService {
   deleteGroup(payload: AddContactToGroupModel): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(payload).forEach(key => {
-      httpParams = httpParams.append(key, payload[key].toString());
+      httpParams = httpParams.append(key, payload[key]?.toString());
     })
     return this.http.delete(this.groupUrl.delete, {params: httpParams});
   }
 
   addMembers(payload: AddContactToGroupModel): Observable<any> {
     return this.http.post(this.groupUrl.addMembers, payload);
+  }
+
+  patchGroupDetails(payload: any): Observable<any> {
+    return this.http.patch(this.groupUrl.patchGroupDetails, payload);
   }
 }

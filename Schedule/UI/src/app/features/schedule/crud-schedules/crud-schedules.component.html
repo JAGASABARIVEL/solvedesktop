@@ -46,15 +46,20 @@
         <ng-template pTemplate="caption">
             <div class="flex align-items-center justify-content-between">
                 <h5 class="m-0"></h5>
-                <span class="p-input-icon-left">
-                    <i class="pi pi-search"></i>
-                    <input 
-                        pInputText 
-                        type="text" 
-                        #searchInput 
-                        (input)="onSearchInput($event, dt)"
-                        placeholder="Search..."
-                    />
+                <span>
+                    <p-inputgroup>
+                        <p-inputgroup-addon>
+                            <i class="pi pi-search"></i>
+                        </p-inputgroup-addon>
+                        <input 
+                            pInputText 
+                            type="text" 
+                            #searchInput 
+                            (input)="onSearchInput($event, dt)"
+                            placeholder="Search..."
+                        />
+                    </p-inputgroup>
+
                 </span>
             </div>
         </ng-template>
@@ -109,7 +114,8 @@
                                 placeholder="Select One"
                                 [filter]="true"
                                 filterBy="name"
-                                [showClear]="true">
+                                [showClear]="true"
+                                appendTo="body">
                                 <ng-template let-option pTemplate="item">
                                     <p-tag 
                                         [value]="option.value" 
@@ -129,7 +135,8 @@
                                 placeholder="Select One"
                                 [filter]="true"
                                 filterBy="name"
-                                [showClear]="true">
+                                [showClear]="true"
+                                appendTo="body">
                                 <ng-template let-option pTemplate="item">
                                     <p-tag 
                                         [value]="option.value" 
@@ -149,7 +156,8 @@
                                 placeholder="Select One"
                                 [filter]="true"
                                 filterBy="name"
-                                [showClear]="true">
+                                [showClear]="true"
+                                appendTo="body">
                                 <ng-template let-option pTemplate="item">
                                     <p-tag 
                                         [value]="option.value" 
@@ -169,6 +177,7 @@
                                 placeholder="Select One"
                                 [filter]="true"
                                 filterBy="label"
+                                appendTo="body"
                                 [showClear]="true">
                                     <ng-template let-option pTemplate="item">
                                         <p-tag 
@@ -189,7 +198,8 @@
                                 placeholder="Select One"
                                 [filter]="true"
                                 filterBy="value"
-                                [showClear]="true">
+                                [showClear]="true"
+                                appendTo="body">
                                     <ng-template let-option pTemplate="item">
                                         <p-tag 
                                             [value]="option.label"
@@ -283,7 +293,7 @@
                 <!--div class="spinner-overlay" *ngIf="dialogProgress">
                     <p-progressSpinner ariaLabel="Saving"></p-progressSpinner>
                 </div-->
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Name</label>
                     <input 
                         type="text" 
@@ -294,7 +304,7 @@
                     />
                 </div>
 
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Status</label>
                     <input 
                         type="text" 
@@ -305,10 +315,11 @@
                     />
                 </div>
 
-                <div class="field">
-                    <label class="mb-3">Recipient</label>
-                    <div class="formgrid grid">
-                        <div class="field col">
+                
+                <div class="flex justify-content-between mb-4 align-items-center">
+                    <label>Recipient</label>
+                    <div class="flex flex-column">
+                        <div class="mb-2">
                             <input 
                                 type="text" 
                                 pInputText 
@@ -317,7 +328,7 @@
                                 disabled
                             />
                         </div>
-                        <div class="field col">
+                        <div>
                             <input 
                                 type="text" 
                                 pInputText
@@ -329,10 +340,12 @@
                     </div>
                 </div>
 
-                <div class="field">
-                    <label class="mb-3">Platform</label>
-                    <div class="formgrid grid">
-                        <div class="field-radiobutton col-6">
+                
+                <div class="flex justify-content-between mb-4 align-items-center">
+                    <label>Platform</label>
+
+                    <div class="flex flex-column">
+                        <div class="mb-2">
                             <p-radioButton 
                                 id="platform1" 
                                 name="platform1" 
@@ -340,9 +353,9 @@
                                 [(ngModel)]="schedule.platform_name"
                                 disabled
                             />
-                            <label for="platform1">Whatsapp</label>
+                            <label for="platform1" class="ml-2">Whatsapp</label>
                         </div>
-                        <div class="field-radiobutton col-6">
+                        <div class="mb-2">
                             <p-radioButton 
                                 id="platform2" 
                                 name="platform2" 
@@ -350,9 +363,9 @@
                                 [(ngModel)]="schedule.platform_name"
                                 disabled
                             />
-                            <label for="platform2">Telegram</label>
+                            <label for="platform2" class="ml-2">Telegram</label>
                         </div>
-                        <div class="field-radiobutton col-6">
+                        <div class="mb-2">
                             <p-radioButton 
                                 id="platform3" 
                                 name="platform3" 
@@ -360,9 +373,9 @@
                                 [(ngModel)]="schedule.platform_name"
                                 disabled
                             />
-                            <label for="platform3">Messanger</label>
+                            <label for="platform3" class="ml-2">Messanger</label>
                         </div>
-                        <div class="field-radiobutton col-6">
+                        <div class=" mb-2">
                             <p-radioButton 
                                 id="platform4" 
                                 name="platform4" 
@@ -370,12 +383,12 @@
                                 [(ngModel)]="schedule.platform_name"
                                 disabled
                             />
-                            <label for="platform4">Instagram</label>
+                            <label for="platform4" class="ml-2">Instagram</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Created On</label>
                     <input 
                         type="text" 
@@ -386,7 +399,7 @@
                     />
                 </div>
 
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Next Schedule</label>
                     <input 
                         type="text" 
@@ -397,7 +410,7 @@
                     />
                 </div>
 
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Frequency</label>
                     <input 
                         type="text" 
@@ -408,7 +421,7 @@
                     />
                 </div>
 
-                <div class="field">
+                <div class="flex justify-content-between mb-4">
                     <label for="name">Created By</label>
                     <input 
                         type="text" 

@@ -1,10 +1,17 @@
 import { OnInit } from '@angular/core';
 import { Component } from '@angular/core';
 import { LayoutService } from './service/app.layout.service';
+import { AppMenuitemComponent } from './app.menuitem.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-menu',
-    templateUrl: './app.menu.component.html'
+    templateUrl: './app.menu.component.html',
+    standalone: true,
+    imports: [
+        CommonModule,
+        AppMenuitemComponent
+    ]
 })
 export class AppMenuComponent implements OnInit {
 
@@ -16,29 +23,39 @@ export class AppMenuComponent implements OnInit {
         this.model = [
             {
                 label: 'Home',
-                icon: 'pi pi-fw pi-briefcase',
+                icon: 'pi pi-home',
                 items: [
                     {
-                        label: 'Products',
-                        icon: 'pi pi-home',
-                        items: [
-                            {
-                                label: 'Schedule',
-                                icon: 'pi pi-fw pi-calendar',
-                                routerLink: ['/schedule']
-                            },
-                            {
-                                label: 'Manage Contacts',
-                                icon: 'pi pi-address-book',
-                                routerLink: ['/contacts']
-                            },
-                            {
-                                label: 'Chat',
-                                icon: 'pi pi-comment',
-                                routerLink: ['/chat']
-                            },
-                        ]
+                        label: 'Dashboard',
+                        icon: 'pi pi-fw pi-home',
+                        routerLink: ['/']
+                    }
+                ]
+            },
+            {
+                label: 'Apps',
+                icon: 'pi pi-home',
+                items: [
+                    {
+                        label: 'Schedule',
+                        icon: 'pi pi-fw pi-calendar',
+                        routerLink: ['/schedule']
                     },
+                    {
+                        label: 'Manage Contact',
+                        icon: 'pi pi-address-book',
+                        routerLink: ['/contacts']
+                    },
+                    {
+                        label: 'Chat',
+                        icon: 'pi pi-comment',
+                        routerLink: ['/chat']
+                    },
+                    //{
+                    //    label: 'Task',
+                    //    icon: 'pi pi-fw pi-briefcase',
+                    //    routerLink: ['/projects/1/tasks/1']
+                    //},
                 ]
             }
         ];

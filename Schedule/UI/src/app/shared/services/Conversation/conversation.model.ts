@@ -22,7 +22,8 @@ export interface ConversationModel {
     created_at: Date,
     organization_id: number,
     status: string,
-    messages: MessageModel[]
+    messages: MessageModel[],
+    isDropdownVisible: boolean
 }
 
   
@@ -33,4 +34,10 @@ export interface UserMessages {
     img: string;
     status: string;
     messages: MessageModel[];
+}
+
+export interface ConversationResponseModel {
+    conversation_id: number,
+    message_body: string,
+    user_id: number
 }

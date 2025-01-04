@@ -1,0 +1,144 @@
+
+<p-scrollTop styleClass="custom-scrolltop" [threshold]="10" behavior="smooth" icon="pi pi-arrow-up"/>
+<div class="card defect-view">
+    <!-- Header Section -->
+    <div class="header-section">
+      <h2 class="task-title">{{ task.title }}</h2>
+    </div>
+    <hr>
+  
+    <!-- Main Content Section -->
+    <div class="content-section">
+      <!-- Left Pane: Details -->
+      <div class="details-section">
+        <p-card class="details-card">
+          <p><strong>Assignee:</strong> {{ task.assignee }}</p>
+          <p><strong>Due Date:</strong> {{ task.due_date | date }}</p>
+          <p><strong>Created By:</strong> {{ task.created_by_name }}</p>
+          <p><strong>Created On:</strong> {{ task.created_at | date }}</p>
+          <p><strong>Status:</strong> {{ task.status }}</p>
+          <p>
+            <strong>Priority:</strong>
+            <p-badge 
+              [value]="task.priority" 
+              [style]="{'background-color': getPriorityColor(task.priority)}">
+            </p-badge>
+          </p>
+        </p-card>
+      </div>
+  
+      <!-- Right Pane: Actions -->
+      <div class="row action-section">
+        <div class="col flex justify-content-end">
+            <p-button
+                label="Edit"
+                icon="pi pi-pencil" 
+                class="mr-2" 
+                [rounded]="true" 
+                [outlined]="true" 
+                severity="success" 
+            >
+            </p-button>
+            <p-button
+                label="Close"
+                icon="pi pi-trash"
+                class="mr-2"
+                [rounded]="true" 
+                [outlined]="true" 
+                severity="danger"
+            >
+            </p-button>
+        </div>
+        <div class="col">
+            <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                <div>
+                    <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Days Spent</span>
+                </div>
+                <div class="mt-2 md:mt-0 flex align-items-center">
+                    <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                        <div class="bg-blue-500 h-full" [ngStyle]="daysSpentvalueStyleWidth"></div>
+                    </div>
+                    <span class="text-blue-500 ml-3 font-medium">{{daysSpentvalue}} days</span>
+                </div>
+            </li>
+            <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                <div>
+                    <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Overdue</span>
+                </div>
+                <div class="mt-2 md:mt-0 flex align-items-center">
+                    <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                        <div class="bg-orange-300 h-full" [ngStyle]="overDueValueStyleWidth"></div>
+                    </div>
+                    <span class="text-orange-300 ml-3 font-medium">{{overDuevalue}} days</span>
+                </div>
+            </li>
+        </div>
+      </div>
+        <!-- Add other action buttons as needed -->
+    </div>
+    <hr>
+  
+    <!-- Description Section -->
+    <p-card header="Description">
+      <p class="description-text">{{ task.description }}</p>
+    </p-card>
+    <hr>
+  
+    <p-tabView>
+        <p-tabPanel header="Comments">
+            <!-- Comments Section -->
+            <p-card header="Comments"  class="comments-panel">
+                <div class="comments-section">
+                  <p-panel [toggleable]="true" *ngFor="let comment of comments">
+          
+                      <ng-template pTemplate="header">
+                          <div class="flex align-items-center gap-2">
+                              <p-avatar
+                              label="{{ comment.user_name | slice:0:1 }}"
+                              size="large" 
+                              shape="circle">
+                              </p-avatar>
+                              <span class="font-bold">
+                                  {{ comment.user_name }}
+                              </span>
+                          </div>
+                      </ng-template>
+                      <ng-template pTemplate="footer">
+                          <div class="flex flex-wrap align-items-center justify-content-between gap-3">
+                              <div class="flex align-items-center gap-2">
+                                  <p-button icon="pi pi-user" rounded="true" text="true" />
+                                  <p-button icon="pi pi-bookmark" severity="secondary" rounded="true" text="true" />
+                              </div>
+                              <span class="p-text-secondary">
+                                  {{ comment.created_at }}
+                              </span>
+                          </div>
+                      </ng-template>
+                      <ng-template pTemplate="icons">
+                          <span class="mr-2 font-bold">
+                              {{ comment.created_at | date:'short' }}
+                          </span>
+                      </ng-template>
+                      <p class="m-0">
+                          {{ comment.comment_body }}
+                      </p>
+                      </p-panel>
+                </div>
+            
+                <!-- Add Comment -->
+                <div class="add-comment">
+                  <textarea [(ngModel)]="newComment" placeholder="Add your comment..." rows="3"></textarea>
+                  <button pButton label="Add Comment" icon="pi pi-send" (click)="addComment()"></button>
+                </div>
+            </p-card>
+        </p-tabPanel>
+        <p-tabPanel header="History Actions">
+            <p>
+                History Actions
+            </p>
+        </p-tabPanel>
+    </p-tabView>
+
+    
+  </div>
+  

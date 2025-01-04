@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -12,6 +12,8 @@ import { Router } from '@angular/router';
 import { PlatformService } from '../../shared/services/Platform/platform.service';
 import { PlatformModel } from '../../shared/services/Platform/platform.model';
 import { ToastModule } from 'primeng/toast';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 
 
 
@@ -21,12 +23,15 @@ import { ToastModule } from 'primeng/toast';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
     DialogModule,
     DividerModule,
     DropdownModule,
-    ToastModule
+    ToastModule,
+    InputGroupModule,
+    InputGroupAddonModule
   ],
   providers: [
     MessageService
@@ -40,6 +45,7 @@ export class UserProfileComponent implements OnInit {
     {"name": "Whatsapp"}
   ]
   selected_platform : any = undefined;
+  formGroup!: FormGroup;
 
   user: LoginResponseModel = undefined;
   platforms!: PlatformModel[];
@@ -48,8 +54,15 @@ export class UserProfileComponent implements OnInit {
   constructor(
     private router: Router,
     private platforService: PlatformService,
-    private messageService: MessageService
-  ) {}
+    private messageService: MessageService,
+    private formBuilder: FormBuilder
+  ) {
+        this.formGroup = this.formBuilder.group({
+          selected_platform_ctrl: ['', [Validators.required]],
+          login_id_form_filed_ctrl: ['', [Validators.required]],
+          token_form_filed_ctrl: ['', [Validators.required]]
+        });
+  }
 
   ngOnInit(): void {
     this.user = JSON.parse(localStorage.getItem('me'));
@@ -63,7 +76,7 @@ export class UserProfileComponent implements OnInit {
       token: undefined,
       login_id: undefined,
       owner_id: this.user.id,
-      status: 'active'      
+      status: 'active'
     }
   }
 
@@ -105,7 +118,12 @@ export class UserProfileComponent implements OnInit {
   onAddPlatform() {
     this.new_platform.owner_id = this.user.id;
     console.log("Selected Platform name ", this.new_platform.platform_name);
-    this.new_platform.platform_name = this.selected_platform.name.toLowerCase() + '_' + this.platforms.length;
+
+    
+    
+    this.new_platform.platform_name = this.formGroup.value.selected_platform_ctrl.name.toLowerCase() + '_' + this.platforms.length;
+    this.new_platform.login_id = this.formGroup.value.login_id_form_filed_ctrl
+    this.new_platform.token = this.formGroup.value.token_form_filed_ctrl
     this.new_platform.status = 'active';
     this.platforService.createPlatform(this.new_platform).subscribe(
       (data) => {

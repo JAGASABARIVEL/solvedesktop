@@ -5,6 +5,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { BadgeModule } from 'primeng/badge';
 import { TabViewModule } from 'primeng/tabview';
 import { ChatWindowComponent } from './chat-window/chat-window.component';
+import { ListActiveConversationsComponent } from './list-active-conversations/list-active-conversations.component';
 import { ListConversationsComponent } from './list-conversations/list-conversations.component';
 
 @Component({
@@ -16,6 +17,7 @@ import { ListConversationsComponent } from './list-conversations/list-conversati
     BadgeModule,
 
     ListConversationsComponent,
+    ListActiveConversationsComponent,
     ChatWindowComponent
   ],
   providers: [
@@ -28,6 +30,7 @@ import { ListConversationsComponent } from './list-conversations/list-conversati
 export class ChatComponent {
   total_conversations: number = 0;
   total_new_conversation_me: number = 0;
+  total_active_conversations: number = 0;
 
   constructor(private router: Router) {}
 
@@ -45,5 +48,9 @@ export class ChatComponent {
 
   onTotalNewConversationsMeHandler(count: number) {
     this.total_new_conversation_me = count;
+  }
+
+  onTotalActiveConversationsHandler(count: number) {
+    this.total_active_conversations = count;
   }
 }

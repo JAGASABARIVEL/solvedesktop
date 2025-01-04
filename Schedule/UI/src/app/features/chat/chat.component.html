@@ -5,12 +5,25 @@
                 <div class="flex align-items-center gap-2">
                     <i class="pi pi-ticket"></i>
                     <span class="font-bold white-space-nowrap m-0">
-                        Tickets
+                        New
                     </span>
                     <p-badge [value]="total_conversations" />
                 </div>
             </ng-template>
             <app-list-conversations (totalConversations)="onTotalConversationsHandler($event)"></app-list-conversations>
+        </p-tabPanel>
+
+        <p-tabPanel>
+            <ng-template pTemplate="header">
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-briefcase"></i>
+                    <span class="font-bold white-space-nowrap m-0">
+                        Active
+                    </span>
+                    <p-badge [value]="total_active_conversations" />
+                </div>
+            </ng-template>
+            <app-list-active-conversations (totalActiveConversations)="onTotalActiveConversationsHandler($event)"></app-list-active-conversations>
         </p-tabPanel>
         
         <p-tabPanel header="Header III">
@@ -23,7 +36,7 @@
                     <p-badge [value]="total_new_conversation_me" />
                 </div>
             </ng-template>
-            <app-chat-window></app-chat-window>
+            <app-chat-window (newUniqueConversationMessageCount)="onTotalNewConversationsMeHandler($event)"></app-chat-window>
         </p-tabPanel>
 
     </p-tabView>

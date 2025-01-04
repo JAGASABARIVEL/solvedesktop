@@ -1,3 +1,4 @@
+<p-toast />
 <div class="card">
     <p-toast />
     <p-toolbar styleClass="mb-4 gap-2">
@@ -28,11 +29,11 @@
         [value]="conversations"
         [rows]="10"
         [paginator]="true"
-        [globalFilterFields]="['contact.name', 'assigned.name', 'status']"
+        [globalFilterFields]="['contact.name', 'contact.phone', 'assigned.name', 'status']"
         [tableStyle]="{ 'min-width': '75rem' }"
         [(selection)]="selectedConversations"
         [rowHover]="true"
-        dataKey="id"
+        dataKey="conversation_id"
         [loading]="loading"
         
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
@@ -41,16 +42,21 @@
         <ng-template pTemplate="caption">
             <div class="flex align-items-center justify-content-between">
                 <h5 class="m-0"></h5>
-                <span class="p-input-icon-left">
-                    <i class="pi pi-search"></i>
-                    <input 
-                      pInputText 
-                      type="text" 
-                      #searchInput 
-                      (input)="onSearchInput($event, dt)"
-                      placeholder="Search..."
-                    />
+                <span>
+                    <p-inputgroup>
+                        <p-inputgroup-addon>
+                            <i class="pi pi-search"></i>
+                        </p-inputgroup-addon>
+                        <input 
+                            pInputText 
+                            type="text" 
+                            #searchInput 
+                            (input)="onSearchInput($event, dt)"
+                            placeholder="Search..."
+                          />
+                    </p-inputgroup>
                 </span>
+                
             </div>
         </ng-template>
 
@@ -70,7 +76,9 @@
                 <th pSortableColumn="status">
                     Status <p-sortIcon field="status" />
                 </th>
-
+                <th pSortableColumn="price">
+                    Created On <p-sortIcon field="created_at"/>
+                </th>
                 <th></th>
             </tr>
         </ng-template>
@@ -81,15 +89,24 @@
                 </td>
                 
                 <td>
-                <p-avatar 
-                    icon="pi pi-user" 
+                <p-avatar *ngIf="conversation.contact?.name !== ''"
+                    label="{{conversation.contact.name | slice:0:1}}"
+                    styleClass="mr-2" size="xlarge" />
+                <p-avatar *ngIf="conversation.contact?.name  === ''"
+                    label="{{conversation.contact.phone | slice:0:1}}"
                     styleClass="mr-2" size="xlarge" />
                 </td>
-                <td>
+                <td *ngIf="conversation.contact.name !== ''">
                     {{ conversation.contact.name }}
                 </td>
-                <td>
+                <td *ngIf="conversation.contact.name === ''">
+                    {{ conversation.contact.phone }}
+                </td>
+                <td *ngIf="conversation.assigned?.name !== null">
                     {{ conversation.assigned?.name }}
+                </td>
+                <td *ngIf="conversation.assigned?.name === null">
+                    Unassigned
                 </td>
                 <td>
                     <p-tag 
@@ -97,24 +114,58 @@
                         [severity]="getSeverity(conversation.status)"
                     />
                 </td>
-
+                <td>{{conversation.created_at | date}}</td>
                 <td>
-                    <p-button 
-                        icon="pi pi-pencil" 
-                        class="mr-2" 
-                        [rounded]="true" 
-                        [outlined]="true" 
-                        label="Assign"
-                        severity="success" 
-                    />
-                    <p-button 
-                        icon="pi pi-lock" 
-                        severity="danger" 
-                        label="Close"
-                        [rounded]="true" 
-                        [outlined]="true" 
-                    />
-                </td>
+                    <div>
+                      <!-- Conditional rendering -->
+                      <ng-container *ngIf="!conversation.isDropdownVisible; else dropdownSearch">
+                        <p-button 
+                          icon="pi pi-pencil" 
+                          class="mr-2" 
+                          [rounded]="true" 
+                          [outlined]="true" 
+                          label="Assign" 
+                          severity="success" 
+                          (click)="toggleDropdown(conversation)">
+                        </p-button>
+                        <p-button 
+                          icon="pi pi-lock" 
+                          severity="danger" 
+                          label="Close" 
+                          [rounded]="true" 
+                          [outlined]="true">
+                        </p-button>
+                      </ng-container>
+                      
+                      <!-- Dropdown Search -->
+                      <ng-template #dropdownSearch>
+                        <div style="display: flex; align-items: center;">
+                          <p-dropdown 
+                            [options]="users" 
+                            [(ngModel)]="conversation.assigned" 
+                            optionLabel="name" 
+                            placeholder="Select user to assign"
+                            filter 
+                            filterBy="name,phone"
+                            appendTo="body">
+                          </p-dropdown>
+                          <p-button 
+                            icon="pi pi-check" 
+                            label="Assign Task" 
+                            [disabled]="!conversation.assigned" 
+                            class="ml-2" 
+                            (click)="assignTask(conversation)">
+                          </p-button>
+                          <p-button 
+                            icon="pi pi-times" 
+                            label="Cancel" 
+                            class="ml-2" 
+                            (click)="cancelAssignment(conversation)">
+                          </p-button>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </td>
             </tr>
         </ng-template>
         <ng-template pTemplate="summary">

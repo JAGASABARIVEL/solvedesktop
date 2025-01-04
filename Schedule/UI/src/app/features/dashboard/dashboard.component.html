@@ -1,0 +1,255 @@
+
+<div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+    <div class="grid">
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">Task Active</span>
+                        <div class="text-900 font-medium text-xl">152</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-shopping-cart text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium">24 new </span>
+                <span class="text-500">since last week</span>
+            </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">Task Closed</span>
+                        <div class="text-900 font-medium text-xl">10</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-map-marker text-orange-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium">5 new </span>
+                <span class="text-500">since last week</span>
+            </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">Active Conversation</span>
+                        <div class="text-900 font-medium text-xl">15</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-comment text-purple-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium">85 </span>
+                <span class="text-500">closed since last 24 hours</span>
+            </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">New Comments</span>
+                        <div class="text-900 font-medium text-xl">152</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-inbox text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium">85 </span>
+                <span class="text-500">updated since last 24 hours</span>
+            </div>
+        </div>
+        <div class="col-12 xl:col-6">
+            <div class="card">
+                <h5>New Conversations</h5>
+                <p-table [value]="conversations" [loading]="loadingNewConversation" [paginator]="true" [rows]="5" responsiveLayout="scroll">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th></th>
+                            <th pSortableColumn="name">Name <p-sortIcon field="contact.name"></p-sortIcon></th>
+                            <th pSortableColumn="price">Not Picked <p-sortIcon field="created_at"></p-sortIcon></th>
+                            <th>View</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-conversation>
+                        <tr>
+                            <td>
+                                <p-avatar *ngIf="conversation.contact.name !== ''" label="{{conversation.contact.name | slice:0:1}}" styleClass="mr-2" size="xlarge"></p-avatar>
+                                <p-avatar *ngIf="conversation.contact.name === ''" label="{{conversation.contact.phone | slice:0:1}}" styleClass="mr-2" size="xlarge"></p-avatar>
+                            </td>
+                            <td *ngIf="conversation.contact.name !== ''" style="width: 35%; min-width: 7rem;">{{conversation.contact.name}}</td>
+                            <td *ngIf="conversation.contact.name === ''" style="width: 35%; min-width: 7rem;">{{conversation.contact.phone}}</td>
+                            <td>
+                                2 Days
+                            </td>
+                            <td>
+                                <button pButton pRipple [routerLink]="['/chat']" type="button" icon="pi pi-search" class="p-button p-component p-button-text p-button-icon-only"></button>
+                            </td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+            <div class="card">
+                <div class="flex justify-content-between align-items-center mb-5">
+                    <h5>Top Conversation Performers</h5>
+                    <p-dropdown 
+                    [options]="intervals" 
+                    [(ngModel)]="selectedConversationPerformerInterval" 
+                    optionLabel="name"
+                    placeholder="Choose Interval" />
+                </div>
+                <ul class="list-none p-0 m-0">
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Ravi</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-orange-500 h-full" [ngStyle]="{width: '100%'}"></div>
+                            </div>
+                            <span class="text-orange-500 ml-3 font-medium">%100</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Raj</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-cyan-500 h-full" [ngStyle]="{width: '80%'}"></div>
+                            </div>
+                            <span class="text-cyan-500 ml-3 font-medium">%80</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Priya</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-pink-500 h-full" [ngStyle]="{width: '70%'}"></div>
+                            </div>
+                            <span class="text-pink-500 ml-3 font-medium">%70</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Venkat</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-green-500 h-full" [ngStyle]="{width: '60%'}"></div>
+                            </div>
+                            <span class="text-green-500 ml-3 font-medium">%60</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Deva</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-purple-500 h-full" [ngStyle]="{width: '50%'}"></div>
+                            </div>
+                            <span class="text-purple-500 ml-3 font-medium">%50</span>
+                        </div>
+                    </li>
+                </ul>
+
+                
+            </div>
+        </div>
+        
+        <div class="col-12 xl:col-6">
+            <div class="card">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>Productivity</h5>
+                    <p-dropdown 
+                      [options]="intervals" 
+                      [(ngModel)]="selectedConversationTimePeriod" 
+                      placeholder="Select Time Period"
+                      optionLabel="name"
+                      (onChange)="updateChartData()"
+                      optionValue="value"
+                      >
+                    </p-dropdown>                    
+                </div>
+                <p-chart
+                      type="bar"
+                      [data]="conversationChartData" 
+                      [options]="conversationChartOptions">
+                </p-chart>
+            </div>
+            <div class="card">
+                <div class="flex justify-content-between align-items-center mb-5">
+                    <h5>Top Task Performers</h5>
+                    <p-dropdown 
+                    [options]="intervals" 
+                    [(ngModel)]="selectedTaskPerformerInterval" 
+                    optionLabel="name"
+                    placeholder="Choose Interval" />
+                </div>
+                <ul class="list-none p-0 m-0">
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Arjun</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-orange-500 h-full" [ngStyle]="{width: '80%'}"></div>
+                            </div>
+                            <span class="text-orange-500 ml-3 font-medium">%80</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Kamal</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-cyan-500 h-full" [ngStyle]="{width: '78%'}"></div>
+                            </div>
+                            <span class="text-cyan-500 ml-3 font-medium">%78</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Suraj</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-pink-500 h-full" [ngStyle]="{width: '70%'}"></div>
+                            </div>
+                            <span class="text-pink-500 ml-3 font-medium">%70</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Venkat</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-green-500 h-full" [ngStyle]="{width: '60%'}"></div>
+                            </div>
+                            <span class="text-green-500 ml-3 font-medium">%60</span>
+                        </div>
+                    </li>
+                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
+                        <div>
+                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Pooja</span>
+                        </div>
+                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
+                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
+                                <div class="bg-purple-500 h-full" [ngStyle]="{width: '55%'}"></div>
+                            </div>
+                            <span class="text-purple-500 ml-3 font-medium">%55</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+    </div>
+</div>

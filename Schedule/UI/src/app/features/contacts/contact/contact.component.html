@@ -39,7 +39,7 @@
         [value]="products"
         [rows]="10"
         [paginator]="true"
-        [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
+        [globalFilterFields]="['name', 'phone', 'country.name', 'representative.name', 'status']"
         [tableStyle]="{ 'min-width': '75rem' }"
         [(selection)]="selectedProducts"
         [rowHover]="true"
@@ -52,15 +52,22 @@
         <ng-template pTemplate="caption">
             <div class="flex align-items-center justify-content-between">
                 <h5 class="m-0">Manage Contacts</h5>
-                <span class="p-input-icon-left">
-                    <i class="pi pi-search"></i>
-                    <input 
-    pInputText 
-    type="text" 
-    #searchInput 
-    (input)="onSearchInput($event, dt)"
-    placeholder="Search..." />
+                <span>
+                    <p-inputgroup>
+                        <p-inputgroup-addon>
+                            <i class="pi pi-search"></i>
+                        </p-inputgroup-addon>
+                        <input 
+                            styleClass="w-10"
+                            pInputText 
+                            type="text" 
+                            #searchInput 
+                            (input)="onSearchInput($event, dt)"
+                            placeholder="Search..."
+                        />
+                    </p-inputgroup>
                 </span>
+                
             </div>
         </ng-template>
         <ng-template pTemplate="header">
@@ -70,7 +77,6 @@
                 </th>
                 
                 <th>
-                    Image
                 </th>
                 <th pSortableColumn="name">
                     Name <p-sortIcon field="name" />
@@ -98,7 +104,7 @@
                     class="shadow-4" /-->
                 <p-avatar 
                     icon="pi pi-user" 
-                    styleClass="mr-2" size="xlarge" />
+                    styleClass="mr-2" size="large" />
                 </td>
                 <td>
                     {{ product.name }}
@@ -154,9 +160,10 @@
                     *ngIf="product.image" / -->
                 <p-avatar 
                     icon="pi pi-user" 
-                    class="block m-auto pb-3" styleClass="mr-2" size="xlarge" />
+                    styleClass="w-2 h-2 mb-3" size="large"
+                />
                 
-                <div class="field">
+                <div class="flex justify-content-between align-items-center mb-3">
                     <label for="name">Name</label>
                     <input 
                         type="text" 
@@ -169,15 +176,15 @@
                         Name is required.
                     </small>
                 </div>
-                <div class="field">
+
+                <div class="flex justify-content-between align-items-center mb-3">
                     <label for="description">Description</label>
-                    <textarea 
+                    <textarea
                         id="description" 
                         pInputTextarea 
                         [(ngModel)]="product.description" 
-                        required 
-                        rows="3" 
-                        cols="20">
+                        required
+                        >
                     </textarea>
                 </div>
                 <div class="field">

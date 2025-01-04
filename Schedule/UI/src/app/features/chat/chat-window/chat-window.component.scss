@@ -1,742 +1,355 @@
-/* Add application styles & imports to this file! */
-body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 70vh;
-    background: #c0c2c0;
-    font-family: "proxima-nova", "Source Sans Pro", sans-serif;
-    font-size: 1em;
-    letter-spacing: 0.1px;
-    color: #32465a;
-    text-rendering: optimizeLegibility;
-    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.004);
-    -webkit-font-smoothing: antialiased;
-  }
-  
-  .card {
-    display: flex;
-    //width: 90vw;
-    /*min-width: 360px;*/
-   
-    height: 70vh;
-    
-    background: #e6eaea;
-  }
-  @media screen and (max-width: 360px) {
-    .card {
-      //width: 100%;
-      height: 70vh;
-    }
-  }
-  .card #sidepanel {
-    float: left;
-    width: 40%;
-    height: 100%;
-    background: #2c3e50;
-    color: #f5f5f5;
-    overflow: hidden;
-    position: relative;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel {
-      width: 58px;
-      min-width: 58px;
-    }
-  }
-  .card #sidepanel #profile {
-    width: 80%;
-    margin: 25px auto;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile {
-      width: 100%;
-      margin: 0 auto;
-      padding: 5px 0 0 0;
-      background: #32465a;
-    }
-  }
-  .card #sidepanel #profile.expanded .wrap {
-    height: 210px;
-    line-height: initial;
-  }
-  .card #sidepanel #profile.expanded .wrap p {
-    margin-top: 20px;
-  }
-  .card #sidepanel #profile.expanded .wrap i.expand-button {
-    -moz-transform: scaleY(-1);
-    -o-transform: scaleY(-1);
-    -webkit-transform: scaleY(-1);
-    transform: scaleY(-1);
-    filter: FlipH;
-    -ms-filter: "FlipH";
-  }
-  .card #sidepanel #profile .wrap {
-    height: 60px;
-    line-height: 60px;
-    overflow: hidden;
-    -moz-transition: 0.3s height ease;
-    -o-transition: 0.3s height ease;
-    -webkit-transition: 0.3s height ease;
-    transition: 0.3s height ease;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap {
-      height: 55px;
-    }
-  }
-  .card #sidepanel #profile .wrap img {
-    width: 50px;
-    border-radius: 50%;
-    padding: 3px;
-    border: 2px solid #e74c3c;
-    height: auto;
-    float: left;
-    cursor: pointer;
-    -moz-transition: 0.3s border ease;
-    -o-transition: 0.3s border ease;
-    -webkit-transition: 0.3s border ease;
-    transition: 0.3s border ease;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap img {
-      width: 40px;
-      margin-left: 4px;
-    }
-  }
-  .card #sidepanel #profile .wrap img.online {
-    border: 2px solid #2ecc71;
-  }
-  .card #sidepanel #profile .wrap img.away {
-    border: 2px solid #f1c40f;
-  }
-  .card #sidepanel #profile .wrap img.busy {
-    border: 2px solid #e74c3c;
-  }
-  .card #sidepanel #profile .wrap img.offline {
-    border: 2px solid #95a5a6;
-  }
-  .card #sidepanel #profile .wrap p {
-    float: left;
-    margin-left: 15px;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap p {
-      display: none;
-    }
-  }
-  .card #sidepanel #profile .wrap i.expand-button {
-    float: right;
-    margin-top: 23px;
-    font-size: 0.8em;
-    cursor: pointer;
-    color: #435f7a;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap i.expand-button {
-      display: none;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options {
-    position: absolute;
-    opacity: 0;
-    visibility: hidden;
-    width: 150px;
-    margin: 70px 0 0 0;
-    border-radius: 6px;
-    z-index: 99;
-    line-height: initial;
-    background: #435f7a;
-    -moz-transition: 0.3s all ease;
-    -o-transition: 0.3s all ease;
-    -webkit-transition: 0.3s all ease;
-    transition: 0.3s all ease;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options {
-      width: 58px;
-      margin-top: 57px;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options.active {
-    opacity: 1;
-    visibility: visible;
-    margin: 75px 0 0 0;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options.active {
-      margin-top: 62px;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options:before {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 8px solid #435f7a;
-    margin: -8px 0 0 24px;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options:before {
-      margin-left: 23px;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options ul {
-    overflow: hidden;
-    border-radius: 6px;
-  }
-  .card #sidepanel #profile .wrap #status-options ul li {
-    padding: 15px 0 30px 18px;
-    display: block;
-    cursor: pointer;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options ul li {
-      padding: 15px 0 35px 22px;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options ul li:hover {
-    background: #496886;
-  }
-  .card #sidepanel #profile .wrap #status-options ul li span.status-circle {
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin: 5px 0 0 0;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options ul li span.status-circle {
-      width: 14px;
-      height: 14px;
-    }
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li
-    span.status-circle:before {
-    content: "";
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    margin: -3px 0 0 -3px;
-    background: transparent;
-    border-radius: 50%;
-    z-index: 0;
-  }
-  @media screen and (max-width: 735px) {
-    .card
-      #sidepanel
-      #profile
-      .wrap
-      #status-options
-      ul
-      li
-      span.status-circle:before {
-      height: 18px;
-      width: 18px;
-    }
-  }
-  .card #sidepanel #profile .wrap #status-options ul li p {
-    padding-left: 12px;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #profile .wrap #status-options ul li p {
-      display: none;
-    }
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-online
-    span.status-circle {
-    background: #2ecc71;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-online.active
-    span.status-circle:before {
-    border: 1px solid #2ecc71;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-away
-    span.status-circle {
-    background: #f1c40f;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-away.active
-    span.status-circle:before {
-    border: 1px solid #f1c40f;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-busy
-    span.status-circle {
-    background: #e74c3c;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-busy.active
-    span.status-circle:before {
-    border: 1px solid #e74c3c;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-offline
-    span.status-circle {
-    background: #95a5a6;
-  }
-  .card
-    #sidepanel
-    #profile
-    .wrap
-    #status-options
-    ul
-    li#status-offline.active
-    span.status-circle:before {
-    border: 1px solid #95a5a6;
-  }
-  .card #sidepanel #profile .wrap #expanded {
-    padding: 100px 0 0 0;
-    display: block;
-    line-height: initial !important;
-  }
-  .card #sidepanel #profile .wrap #expanded label {
-    float: left;
-    clear: both;
-    margin: 0 8px 5px 0;
-    padding: 5px 0;
-  }
-  .card #sidepanel #profile .wrap #expanded input {
-    border: none;
-    margin-bottom: 6px;
-    background: #32465a;
-    border-radius: 3px;
-    color: #f5f5f5;
-    padding: 7px;
-    width: calc(100% - 43px);
-  }
-  .card #sidepanel #profile .wrap #expanded input:focus {
-    outline: none;
-    background: #435f7a;
-  }
-  .card #sidepanel #search {
-    border-top: 1px solid #32465a;
-    border-bottom: 1px solid #32465a;
-    font-weight: 300;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #search {
-      display: none;
-    }
-  }
-  .card #sidepanel #search label {
-    position: absolute;
-    margin: 10px 0 0 20px;
-  }
-  .card #sidepanel #search input {
-    font-family: "proxima-nova", "Source Sans Pro", sans-serif;
-    padding: 10px 0 10px 46px;
-    width: calc(100% - 25px);
-    border: none;
-    background: #32465a;
-    color: #f5f5f5;
-  }
-  .card #sidepanel #search input:focus {
-    outline: none;
-    background: #435f7a;
-  }
-  .card #sidepanel #search input::-webkit-input-placeholder {
-    color: #f5f5f5;
-  }
-  .card #sidepanel #search input::-moz-placeholder {
-    color: #f5f5f5;
-  }
-  .card #sidepanel #search input:-ms-input-placeholder {
-    color: #f5f5f5;
-  }
-  .card #sidepanel #search input:-moz-placeholder {
-    color: #f5f5f5;
-  }
-  .card #sidepanel #contacts {
-    height: calc(100% - 177px);
-    overflow-y: scroll;
-    overflow-x: hidden;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #contacts {
-      height: calc(100% - 149px);
-      overflow-y: scroll;
-      overflow-x: hidden;
-    }
-    .card #sidepanel #contacts::-webkit-scrollbar {
-      display: none;
-    }
-  }
-  .card #sidepanel #contacts.expanded {
-    height: calc(100% - 334px);
-  }
-  .card #sidepanel #contacts::-webkit-scrollbar {
-    width: 8px;
-    background: #2c3e50;
-  }
-  .card #sidepanel #contacts::-webkit-scrollbar-thumb {
-    background-color: #243140;
-  }
-  .card #sidepanel #contacts ul li.contact {
-    position: relative;
-    padding: 10px 0 15px 0;
-    font-size: 0.9em;
-    cursor: pointer;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #contacts ul li.contact {
-      padding: 6px 0 46px 8px;
-    }
-  }
-  .card #sidepanel #contacts ul li.contact:hover {
-    background: #32465a;
-  }
-  .card #sidepanel #contacts ul li.contact.active {
-    background: #32465a;
-    border-right: 5px solid #435f7a;
-  }
-  .card #sidepanel #contacts ul li.contact.active span.contact-status {
-    border: 2px solid #32465a !important;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap {
-    width: 88%;
-    margin: 0 auto;
-    position: relative;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #contacts ul li.contact .wrap {
-      width: 100%;
-    }
-  }
-  .card #sidepanel #contacts ul li.contact .wrap span {
-    position: absolute;
-    left: 0;
-    margin: -2px 0 0 -2px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid #2c3e50;
-    background: #95a5a6;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap span.online {
-    background: #2ecc71;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap span.away {
-    background: #f1c40f;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap span.busy {
-    background: #e74c3c;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap img {
-    width: 40px;
-    border-radius: 50%;
-    float: left;
-    margin-right: 10px;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #contacts ul li.contact .wrap img {
-      margin-right: 0px;
-    }
-  }
-  .card #sidepanel #contacts ul li.contact .wrap .meta {
-    padding: 5px 0 0 0;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #contacts ul li.contact .wrap .meta {
-      display: none;
-    }
-  }
-  .card #sidepanel #contacts ul li.contact .wrap .meta .name {
-    font-weight: 600;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap .meta .preview {
-    margin: 5px 0 0 0;
-    padding: 0 0 1px;
-    font-weight: 400;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -moz-transition: 1s all ease;
-    -o-transition: 1s all ease;
-    -webkit-transition: 1s all ease;
-    transition: 1s all ease;
-  }
-  .card #sidepanel #contacts ul li.contact .wrap .meta .preview span {
-    position: initial;
-    border-radius: initial;
-    background: none;
-    border: none;
-    padding: 0 2px 0 0;
-    margin: 0 0 0 1px;
-    opacity: 0.5;
-  }
-  .card #sidepanel #bottom-bar {
-    position: absolute;
-    width: 100%;
-    bottom: 0;
-  }
-  .card #sidepanel #bottom-bar button {
-    float: left;
-    border: none;
-    width: 50%;
-    padding: 10px 0;
-    background: #32465a;
-    color: #f5f5f5;
-    cursor: pointer;
-    font-size: 0.85em;
-    font-family: "proxima-nova", "Source Sans Pro", sans-serif;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #bottom-bar button {
-      float: none;
-      width: 100%;
-      padding: 15px 0;
-    }
-  }
-  .card #sidepanel #bottom-bar button:focus {
-    outline: none;
-  }
-  .card #sidepanel #bottom-bar button:nth-child(1) {
-    border-right: 1px solid #2c3e50;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #bottom-bar button:nth-child(1) {
-      border-right: none;
-      border-bottom: 1px solid #2c3e50;
-    }
-  }
-  .card #sidepanel #bottom-bar button:hover {
-    background: #435f7a;
-  }
-  .card #sidepanel #bottom-bar button i {
-    margin-right: 3px;
-    font-size: 1em;
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #bottom-bar button i {
-      font-size: 1.3em;
-    }
-  }
-  @media screen and (max-width: 735px) {
-    .card #sidepanel #bottom-bar button span {
-      display: none;
-    }
-  }
-  .card .content {
-    float: right;
-    width: 60%;
-    height: 100%;
-    overflow: hidden;
-    position: relative;
-  }
-  @media screen and (max-width: 735px) {
-    .card .content {
-      width: calc(100% - 58px);
-      min-width: 300px !important;
-    }
-  }
-  
-  .card .content .contact-profile {
-    width: 100%;
-    height: 60px;
-    line-height: 60px;
-    background: #f5f5f5;
-  }
-  .card .content .contact-profile img {
-    width: 40px;
-    border-radius: 50%;
-    float: left;
-    margin: 9px 12px 0 9px;
-  }
-  .card .content .contact-profile p {
-    float: left;
-    margin-top: 12px;
-  }
-  .card .content .contact-profile .social-media {
-    float: right;
-  }
-  .card .content .contact-profile .social-media i {
-    margin-left: 14px;
-    cursor: pointer;
-  }
-  .card .content .contact-profile .social-media i:nth-last-child(1) {
-    margin-right: 20px;
-  }
-  .card .content .contact-profile .social-media i:hover {
-    color: #435f7a;
-  }
-  .card .content .messages {
-    height: auto;
-    min-height: calc(100% - 93px);
-    max-height: calc(100% - 93px);
-    overflow-y: scroll;
-    overflow-x: hidden;
-  }
-  @media screen and (max-width: 735px) {
-    .card .content .messages {
-      max-height: calc(100% - 105px);
-    }
-  }
-  .card .content .messages::-webkit-scrollbar {
-    width: 8px;
-    background: transparent;
-  }
-  .card .content .messages::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.3);
-  }
-  .card .content .messages ul li {
-    display: inline-block;
-    clear: both;
-    float: left;
-    margin: 15px 15px 5px 15px;
-    width: calc(100% - 25px);
-    font-size: 0.9em;
-  }
-  .card .content .messages ul li:nth-last-child(1) {
-    margin-bottom: 20px;
-  }
-  .card .content .messages ul li.org img {
-    margin: 6px 8px 0 0;
-  }
-  .card .content .messages ul li.org p {
-    background: #435f7a;
-    color: #f5f5f5;
-  }
-  .card .content .messages ul li.customer img {
-    float: right;
-    margin: 6px 0 0 8px;
-  }
-  .card .content .messages ul li.customer p {
-    background: #f5f5f5;
-    float: right;
-  }
-  .card .content .messages ul li img {
-    width: 22px;
-    border-radius: 50%;
-    float: left;
-  }
-  .card .content .messages ul li p {
-    display: inline-block;
-    padding: 10px 15px;
-    border-radius: 20px;
-    max-width: 205px;
-    line-height: 130%;
-  }
-  @media screen and (min-width: 735px) {
-    .card .content .messages ul li p {
-      max-width: 300px;
-    }
-  }
-  .card .content .message-input {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    z-index: 99;
-  }
-  .card .content .message-input .wrap {
-    position: relative;
-  }
-  .card .content .message-input .wrap input {
-    font-family: "proxima-nova", "Source Sans Pro", sans-serif;
-    float: left;
-    border: none;
-    width: calc(100% - 90px);
-    padding: 11px 32px 10px 8px;
-    font-size: 0.8em;
-    color: #32465a;
-  }
-  @media screen and (max-width: 735px) {
-    .card .content .message-input .wrap input {
-      padding: 15px 32px 16px 8px;
-    }
-  }
-  .card .content .message-input .wrap input:focus {
-    outline: none;
-  }
-  .card .content .message-input .wrap .pi-paperclip {
-    position: absolute;
-    right: 60px;
-    z-index: 4;
-    margin-top: 10px;
-    font-size: 1.1em;
-    color: #435f7a;
-    opacity: 0.5;
-    cursor: pointer;
-  }
+.whatsapp-container {
+  display: flex;
+  height: 70vh;
+  background-color: #f0f0f0;
+}
 
-  .pi-send {
-    font-size: 1em;
-  }
+/* Sidebar */
+.sidebar {
+  width: 30%;
+  background-color: #ededed;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #ccc;
+}
 
-  @media screen and (max-width: 735px) {
-    .card .content .message-input .wrap .pi-paperclip {
-      margin-top: 17px;
-      right: 65px;
-    }
-  }
-  .card .content .message-input .wrap .pi-paperclip:hover {
-    opacity: 1;
-  }
-  .card .content .message-input .wrap button {
-    float: right;
-    border: none;
-    width: 50px;
-    padding: 12px 0;
-    cursor: pointer;
-    background: #32465a;
-    color: #f5f5f5;
-  }
-  @media screen and (max-width: 735px) {
-    .card .content .message-input .wrap button {
-      padding: 16px 0;
-    }
-  }
-  .card .content .message-input .wrap button:hover {
-    background: #435f7a;
-  }
-  .card .content .message-input .wrap button:focus {
-    outline: none;
-  }
-  
-  
+/* Profile Section */
+.profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.profile-info {
+  display: flex;
+  align-items: flex-start; /* Align items to the top */
+}
+
+.profile-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Align text to the top */
+  line-height: 1.2; /* Adjust spacing between lines */
+  color: #333;
+}
+
+.profile-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  color: #333;
+}
+
+.profile-username {
+  font-size: 14px;
+  color: #c7c7c7;
+  margin: 0;
+  color: #333;
+}
+
+.icons .icon-button {
+  background-color: transparent;
+  color: white;
+  border: none;
+  font-size: 18px;
+}
+
+.icons .icon-button:hover {
+  color: #c0f1dd;
+}
+
+
+/* Search Contacts */
+.search {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  border-bottom: 1px solid #ccc;
+}
+
+.search .pi-search {
+  margin-right: 0.5rem;
+  color: #999;
+}
+
+.search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.5rem;
+  background: transparent;
+}
+
+/* Contact List */
+.contacts {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.user-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.name {
+  font-weight: bold;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.preview {
+  margin: 0;
+  color: #888;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Time and Badge Container */
+.time-container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: flex-end; /* Align both time and badge at the right end */
+  gap: 0.3rem;
+  justify-content: flex-start; /* Align to the top */
+}
+
+.time {
+  font-size: 0.8rem;
+  color: #999;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.unread-badge {
+  margin-top: 0.2rem; /* Adjust for spacing between badge and time */
+}
+
+
+/* Chat Section */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #f0f0f0;
+}
+
+/* Contact Profile */
+.contact-profile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background-color: #f9f9f9;
+}
+
+.contact-profile .user-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.contact-profile .user-info {
+  display: flex;
+  flex-direction: column; /* Stack name and icon vertically */
+  align-items: flex-start; /* Align content to the left */
+  flex-grow: 1;
+}
+
+.contact-profile .user-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.contact-profile .whatsapp-icon {
+  font-size: 18px;
+  color: #25D366; /* WhatsApp green */
+  margin-top: 5px;
+}
+
+
+
+/* Messages */
+.messages {
+  display: flex; /* Ensure flexbox is applied */
+  flex-direction: column; /* Align items vertically */
+  padding: 1rem;
+  height: 100%; /* Adjust as needed */
+  overflow-y: auto; /* For scrolling messages */
+}
+
+.messages ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column; /* Ensure messages stack vertically */
+  gap: 1rem; /* Add spacing between messages */
+}
+
+.messages li {
+  display: flex;
+  align-items: flex-start;
+  max-width: 75%; /* Limit message width */
+  word-wrap: break-word;
+}
+
+.messages li.customer {
+  align-self: flex-end; /* Push message to the right */
+  flex-direction: row-reverse;
+}
+
+.messages li.received {
+  align-self: flex-start; /* Align message to the left */
+}
+
+.messages li img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 0 0.5rem;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  background-color: white; /* Default color for received */
+  padding: 0.5rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+  position: relative;
+}
+
+.conversation-content {
+  display: flex;
+  flex-direction: row;
+  font-size: 0.9rem;
+}
+
+.messages li.customer .message-content {
+  background-color: #dcf8c6; /* Light green for sent */
+}
+
+.timestamp {
+  font-size: 0.7rem;
+  color: #888;
+  text-align: right;
+  margin-top: 0.3rem;
+}
+
+.sender-name {
+  font-weight: bold;
+  color: #555;
+  margin-right: 0.5rem;
+}
+
+/* Message Input */
+.message-input {
+  padding: 1rem;
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+}
+
+.message-input .wrap {
+  display: flex;
+  align-items: center;
+}
+
+.message-input input {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.message-input input:focus {
+  border-color: #075e54;
+}
+
+.icon-button {
+  margin-left: 0.5rem;
+  background-color: #075e54;
+  color: white;
+  border: none;
+}
+
+.icon-button:hover {
+  background-color: #0b8065;
+}
+
+
+/* Red Line and Centered Text */
+.status-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centers the text with respect to the lines */
+  margin: 1rem 0; /* Space above and below */
+ /* Red color for text */
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.status-marker .closed-text {
+  color: #ff0000;
+}
+.status-marker .open-text {
+  color: rgb(9, 147, 105);
+}
+.status-marker .closed-line {
+  flex: 1; /* Makes the line take up available space */
+  height: 2px; /* Slightly thicker line */
+  background-color: #ff0000; /* Red color */
+  margin: 0 10px; /* Spacing around the text */
+}
+
+.status-marker .open-line {
+  flex: 1; /* Makes the line take up available space */
+  height: 2px; /* Slightly thicker line */
+  background-color: rgb(9, 147, 105);/* Teal color */
+  margin: 0 10px; /* Spacing around the text */
+}
+
+.status-marker .status-text {
+  white-space: nowrap; /* Prevents text wrapping */
+  padding: 0 5px;
+  background-color: #fff; /* Matches the background to avoid overlap */
+  z-index: 1; /* Ensures the text is above the lines */
+}

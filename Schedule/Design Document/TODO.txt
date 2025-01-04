@@ -1,23 +1,71 @@
+
+Phase 1:
+1. Dashboard
+   - Global
+   - User
+2. Schedule
+3. Contact management
+4. Conversation Management
+5. Jira link to track and fix bugs
+
+Phase 2:
+1. Jobsheet / Task management
+
+Phase 3:
+1. Email Management
+
+Phase 4:
+Mobile Application
+
+Features:
+Employee Management (can be clubbed to #2 or #3):
+  1. Timesheet
+  2. Performance Feedback
+  3. Separation request
+
+Cusomer Conversation
+  1. Multichannel support
+     - Reduce leads
+	 - Saves time
+     - Reduce cost
+
+
 Schedule Fixed:
 ===============
 P0
 --
-14. Unsubscribe the subscribed services - P0
-10. Fix object in organization - P0
-8. Add labels to signup, login, compose forms - P0
-9. Change the excel header from 'Phone' to 'phone' for consistency - P0
-11. Change the schedule enpoint with prefix '/schedule' for consistency across service(s) - P0
-12. Add error details for signup/login page - P0
-1. Learn why we need to add service in provider list though its injected in constructor - P0
-2. Add avatar in login / signup page instead of photo - P0
+1. General - Unsubscribe the subscribed services - P0
+
+1. phase1 - Add error details for signup/login page - P0
+2. Phase1 - Add a disabled feature in send button in compose so that user do not click multiple time - P0
+
+1. schedule - Schedule message should also appear in conversation window of the user
+2. schedule - Add reload button in "message history" or polling BE for new message history.
+3. schedule - Change the schedule enpoint with prefix '/schedule' for consistency across service(s) - P0
+4. schedule - Change the excel header from 'Phone' to 'phone' for consistency - P0
+5. schedule - Cleanup the uploaded_files - P0
+
+1. conversation - Perform bulk operation(close/open) on selecting multiple conversation.
+2. conversation - Querry the webhook server and update the delivery status
+3. conversation - Conversation window should have a provision to load the older closed conversations as well based on request button with history details "closed_by" and "closed_reason"
+4. conversation - search/start a new conversation
+5. conversation - Attachments handling in conversation window
+
+1. contact - Try syncing the contacts with watsapp web
+2. contact - Contact management should have the capablity of accepting additional fields - json for additionalal fields
+3. contact - Add contact and Group tabs to manage contacts - P1
+
+1. socket - The main server should also have a mechaniums if the connection could not be made it should take action if needed
+2. socket - Use eventlet server for production socketio
+
+
+
 
 P1
 --
+1. Learn why we need to add service in provider list though its injected in constructor - P0
+2. Add avatar in login / signup page instead of photo - P1
 3. Implement "validate user authentication logic" for all endpoint - P1
-4. Add contact and Group tabs toi manage contacts - P1
-5. Add a disabled feature in send button in compose so that user do not click multiple time - P0
-6. Cleanup the uploaded_files - P0
-7. Querry the webhook server and update the delivery status
 13. We should logout user based on session timing or databaselook up since empty DB sometime login users
     - This would get resolved once we have authorization from server instead of localstorage as cached login after login process.
 

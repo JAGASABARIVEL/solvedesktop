@@ -59,16 +59,17 @@
 
     <div *ngIf="selected_contacts != undefined" class="col-12 lg:col-6 xl:col-3">
         <div class="card mb-0">
-            <p-floatLabel>
-            <p-calendar
-            styleClass="w-full p-1"
-            [(ngModel)]="selected_date_time" 
-            [showIcon]="true"
-            [showTime]="true"
-            inputId="schedule_date" 
-            [showOnFocus]="false"
-            (onSelect)="onScheduleDateTimeSelected()"
+            <p-floatLabel>            
+            <p-datepicker
+              styleClass="w-full p-1"
+              [(ngModel)]="selected_date_time"
+              inputId="schedule_date"
+              showIcon
+              [showTime]="true"
+              iconDisplay="input"
+              (onSelect)="onScheduleDateTimeSelected()"
             />
+
             <label for="schedule_date">Schedule Date</label>
         </p-floatLabel>
         </div>
@@ -103,7 +104,6 @@
                 [options]="platform" 
                 [(ngModel)]="selected_platform" 
                 optionLabel="platform_name" 
-                [placeholder]="contact_list_placeholder"
                 (onChange)="onPlatformSelected()"
                 />
                 <label for="platform">Platform</label>
@@ -151,7 +151,7 @@
                             </div>
                             <span class="font-semibold">{{ file.name }}</span>
                             <div>{{ formatSize(file.size) }}</div>
-                            <p-badge value="selected" severity="warning" />
+                            <p-badge value="selected" severity="warn" />
                             <p-button icon="pi pi-times" (onClick)="onRemoveTemplatingFile($event, file, removeFileCallback, i)" [outlined]="true" [rounded]="true" severity="danger" />
                         </div>
                     </div>
@@ -198,8 +198,8 @@
     </p-floatLabel>
 
     <div class="flex justify-content-end gap-2">
-        <p-button label="Cancel" severity="secondary" (onClick)="add_contact_modal_visible = false" />
-        <p-button label="Save" (onClick)="add_individual_contacts()" />
+        <p-button label="Cancel" severity="secondary" (onClick)="onCancelNewContacts()" />
+        <p-button label="Save" [disabled]="new_contact.name === '' || new_contact.phone === ''" (onClick)="add_individual_contacts()" />
     </div>
 </p-dialog>
 
@@ -226,7 +226,7 @@
     </div>
 
     <div class="flex justify-content-end gap-2">
-        <p-button label="Cancel" severity="secondary" (onClick)="create_group_modal_visible = false" />
-        <p-button label="Save" (onClick)="create_group()" />
+        <p-button label="Cancel" severity="secondary" (onClick)="onCancelNewGroup()" />
+        <p-button label="Save" [disabled]="selected_contacts_for_creating_group === undefined || selected_contacts_for_creating_group?.length === 0" (onClick)="create_group()" />
     </div>
 </p-dialog>
