@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 
 from flask import Flask, request, jsonify
 from confluent_kafka import Producer, KafkaError
@@ -127,6 +128,7 @@ def whatsapp_webhook():
             return jsonify({"status": "success"}), 200
         except Exception as e:
             print("Error:", e)
+            print(traceback.format_exc())
             return jsonify({"status": "error", "message": str(e)}), 400
 
 @app.route('/schedule/notifications/<phone_number_id>', methods=['GET'])
