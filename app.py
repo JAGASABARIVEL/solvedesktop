@@ -1,67 +1,94 @@
+
+
 import os
 import json
 import traceback
+import logging
+import time
+from threading import Thread
 
 from flask import Flask, request, jsonify
 from confluent_kafka import Producer, KafkaError
 
 app = Flask(__name__)
 
+# Configure Logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+registered_phone_number_last_sent_schedule = {}
+registered_phone_number_last_sent_conversation = {}
+
+registered_phone_number_last_received = {}
+
 # Kafka Configuration
 TOPIC = 'whatsapp'
 
 def read_config():
-  # reads the client configuration from client.properties
-  # and returns it as a key-value map
-  config = {}
-  with open("kafka.config") as fh:
-    for line in fh:
-      line = line.strip()
-      if len(line) != 0 and line[0] != "#":
-        parameter, value = line.strip().split('=', 1)
-        config[parameter] = value.strip()
-  return config
+    """
+    Reads the client configuration from kafka.config
+    and returns it as a key-value dictionary.
+    """
+    config = {}
+    with open("kafka.config") as fh:
+        for line in fh:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                parameter, value = line.split('=', 1)
+                config[parameter.strip()] = value.strip()
+    return config
 
 producer_config = read_config()
 producer_config["sasl.username"] = os.getenv("kf_username")
 producer_config["sasl.password"] = os.getenv("kf_password")
 
-# Replace 'your_verify_token' with your actual verify token
-# Load environment variables
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")  # Retrieve VERIFY_TOKEN
-SECRET_KEY = os.getenv("SECRET_KEY")      # Retrieve SECRET_KEY
+# Replace with your actual tokens
+VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-registered_phone_number_last_sent = {}
-registered_phone_number_last_received = {}
-
-
+# Initialize Kafka Producer
 producer = Producer(producer_config)
+
+time.sleep(5)
+print("Producer is ready to produce")
+
+def flush_kafka_messages_consistently():
+    while True:
+        producer.flush()
+        time.sleep(2)
+
+def start_background_tasks():
+    flush_thread = Thread(target=flush_kafka_messages_consistently, daemon=True)
+    flush_thread.start()
+
 def delivery_report(err, msg):
     """
-    Callback for delivery reports.
-    Called once for each message produced to indicate delivery result.
+    Callback for delivery reports. Logs the delivery result.
     """
     if err is not None:
-        print(f"Message delivery failed: {err}")
+        logger.error(f"Message delivery failed: {err}")
     else:
-        print(f"Message delivered to {msg.topic()} [{msg.partition()}]")
+        logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
 def publish_message(topic, msg):
+    """
+    Publishes a message to Kafka asynchronously.
+    """
     try:
-        # Produce a message asynchronously
         producer.produce(
             topic,
             value=json.dumps(msg),
-            callback=delivery_report  # Attach the delivery callback
+            callback=delivery_report
         )
-        # Ensure messages are flushed to Kafka
-        producer.flush()
+        print("Producer produced message")
     except KafkaError as e:
-        print(f"Failed to produce message: {e}")
+        logger.error(f"Failed to produce message: {e}")
 
 def send_msg(phone_number_id, from_user, msg, msg_type):
+    """
+    Formats and publishes a message to Kafka.
+    """
     try:
-        data = request.json
         if msg_type == "text":
             message = {
                 "recipient_id": from_user,
@@ -70,75 +97,87 @@ def send_msg(phone_number_id, from_user, msg, msg_type):
             }
         publish_message(TOPIC, message)
     except Exception as e:
-        raise Exception("Failed to publish message to broker") from e
+        logger.error(f"Error sending message: {e}")
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def whatsapp_webhook():
-    recipient_id = None
-    status = None
-    error_details = None
+    """
+    Handles WhatsApp webhook events.
+    """
     if request.method == 'GET':
-        # Verification request from WhatsApp
         mode = request.args.get('hub.mode')
         token = request.args.get('hub.verify_token')
         challenge = request.args.get('hub.challenge')
 
         if mode == 'subscribe' and token == VERIFY_TOKEN:
-            # Validating the webhook
-            print("Webhook verified successfully")
+            logger.info("Webhook verified successfully")
             return challenge, 200
         else:
-            # Verification failed
-            print("Webhook verification failed")
+            logger.warning("Webhook verification failed")
             return "Forbidden", 403
 
     elif request.method == 'POST':
-        # Handle incoming messages
         try:
             data = request.get_json()
-            notification = data
-            value = notification.get('entry')[0].get('changes')[0].get('value')
-            phone_number_id = value.get('metadata').get('phone_number_id')
+            logger.info(f"Received data: {data}")
+
+            value = data.get('entry', [{}])[0].get('changes', [{}])[0].get('value', {})
+            phone_number_id = value.get('metadata', {}).get('phone_number_id')
+            registered_phone_number_last_sent_conversation.setdefault(phone_number_id, {})
+            registered_phone_number_last_sent_schedule.setdefault(phone_number_id, {})
+
             if value.get('statuses'):
-                recipient_id = value.get('statuses')[0].get('recipient_id')
-                status = value.get('statuses')[0].get('status') 
-                if status in ['failed']:
-                    error_details = value.get('statuses')[0].get('errors')[0].get('error_data').get('details')
-                registered_phone_number_last_sent.setdefault(phone_number_id, {}).setdefault(recipient_id, {}).update({'status': status})
-                registered_phone_number_last_sent.setdefault(phone_number_id, {}).setdefault(recipient_id, {}).update({'error_details': error_details})
+                recipient_id = value['statuses'][0].get('recipient_id')
+                status = value['statuses'][0].get('status')
+                error_details = None
+                if status == 'failed':
+                    error_details = value['statuses'][0].get('errors', [{}])[0].get('error_data', {}).get('details')
+                
+                #TODO: This needs more efficient way of tracking the message status.
+                # For schedule
+                registered_phone_number_last_sent_schedule[phone_number_id].update(
+                    {recipient_id: {"status": status, "error_details": error_details}}
+                )
+                # For conversation
+                registered_phone_number_last_sent_conversation[phone_number_id].update(
+                    {recipient_id: {"status": status, "error_details": error_details}}
+                )
+                logger.info(f"Status update: {status}, Error: {error_details}")
+
             elif value.get('messages'):
-                messages = value.get('messages')
+                messages = value['messages']
                 for message in messages:
                     recipient_id = message.get('from')
                     if message.get('type') == 'text':
-                        message = message.get('text').get('body')
-                        timestamp = message.get('timestamp')
-                        registered_phone_number_last_received.setdefault(phone_number_id, {}).setdefault(recipient_id, {}).update({'received_time': timestamp, 'message': message})
-
-            print("Received data:", notification)
-            # Extract necessary information
-            if notification and 'messages' in value:
-                messages = value.get('messages')
-                for message in messages:
-                    sender = message.get('from')  # Sender's phone number
-                    message_text = message.get('text', {}).get('body')  # Message text
-                    print(f"Message from {sender}: {message_text}")
-                    send_msg(phone_number_id=phone_number_id, from_user=sender, msg=message_text, msg_type="text")
-                    # Process the message (e.g., respond, store in database, etc.)
+                        text_message = message['text']['body']
+                        logger.info(f"Received text message from {recipient_id}: {text_message}")
+                        send_msg(phone_number_id=phone_number_id, from_user=recipient_id, msg=text_message, msg_type="text")
             return jsonify({"status": "success"}), 200
         except Exception as e:
-            print("Error:", e)
-            print(traceback.format_exc())
+            logger.error(f"Error processing webhook: {e}")
+            logger.debug(traceback.format_exc())
             return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route('/schedule/notifications/<phone_number_id>', methods=['GET'])
-def get_last_message_status_details_from_recipient_number(phone_number_id):
-    print("Received phone number id:", registered_phone_number_last_sent)
-    return jsonify(registered_phone_number_last_sent.get(phone_number_id, {}))
+@app.route('/schedule/notifications/<phone_number_id>/<recipient_phone_number>', methods=['GET'])
+def get_last_schedule_message_status_details_from_recipient_number(phone_number_id, recipient_phone_number):
+    response = registered_phone_number_last_sent_schedule.get(phone_number_id, {}).get(recipient_phone_number, {})
+    if response:
+        del registered_phone_number_last_sent_schedule[phone_number_id][recipient_phone_number]
+    print("Schedule - Received request for egtting status", "\nphone_number_id ", phone_number_id,"\nrecipient_phone_number", recipient_phone_number)
+    print("Schedule - Drafted status response:", response)
+    return jsonify({recipient_phone_number: response})
+
+@app.route('/conversation/notifications/<phone_number_id>/<recipient_phone_number>', methods=['GET'])
+def get_last_conv_message_status_details_from_recipient_number(phone_number_id, recipient_phone_number):
+    response = registered_phone_number_last_sent_conversation.get(phone_number_id, {}).get(recipient_phone_number, {})
+    if response:
+        del registered_phone_number_last_sent_conversation[phone_number_id][recipient_phone_number]
+    print("Conversation - Received request for egtting status", "\nphone_number_id ", phone_number_id,"\nrecipient_phone_number", recipient_phone_number)
+    print("Conversation - Drafted status response:", response)
+    return jsonify({recipient_phone_number: response})
 
 
-
-
+start_background_tasks()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run()
