@@ -1,66 +1,129 @@
 
 <div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+
     <div class="grid">
+
+        <div class="col-12">
+            <div class="flex align-items-center justify-content-end mb-3">
+                <p-floatlabel>
+                    <p-datepicker class="mr-5" [(ngModel)]="select_global_duration" id="global_interval" showIcon dateFormat="yy-mm-dd"  selectionMode="range" />
+                    <label for="global_interval">Choose Duration</label>
+                </p-floatlabel>
+                <p-floatlabel>
+                <p-dropdown 
+                    [options]="periods" 
+                    [(ngModel)]="selectedConversationMainPeriod" 
+                    optionLabel="name"
+                    (onChange)="onSelectedConversationMainIntervalChange()"
+                    id="global_period"
+                />
+                <label for="global_period">Choose Interval</label>
+                </p-floatlabel>
+            </div>
+        </div>
+
+
         <div class="col-12 md:col-6 lg:col-3">
             <div class="surface-card shadow-2 p-3 border-round">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Task Active</span>
-                        <div class="text-900 font-medium text-xl">152</div>
+                        <span class="block text-500 font-medium mb-3">New Conversations</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.new}}</div>
                     </div>
                     <div class="flex align-items-center justify-content-center bg-blue-100 border-round" style="width:2.5rem;height:2.5rem">
                         <i class="pi pi-shopping-cart text-blue-500 text-xl"></i>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">24 new </span>
-                <span class="text-500">since last week</span>
+                <span class="text-green-500 font-medium">{{organizationConversationPerformance.new}} new </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
             </div>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
             <div class="surface-card shadow-2 p-3 border-round">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Task Closed</span>
-                        <div class="text-900 font-medium text-xl">10</div>
+                        <span class="block text-500 font-medium mb-3">Active Conversations</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.active}}</div>
                     </div>
                     <div class="flex align-items-center justify-content-center bg-orange-100 border-round" style="width:2.5rem;height:2.5rem">
                         <i class="pi pi-map-marker text-orange-500 text-xl"></i>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">5 new </span>
-                <span class="text-500">since last week</span>
+                <span class="text-green-500 font-medium">{{organizationConversationPerformance.active}} active </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
             </div>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
             <div class="surface-card shadow-2 p-3 border-round">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">Active Conversation</span>
-                        <div class="text-900 font-medium text-xl">15</div>
+                        <span class="block text-500 font-medium mb-3">Closed Conversations</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.closed}}</div>
                     </div>
                     <div class="flex align-items-center justify-content-center bg-purple-100 border-round" style="width:2.5rem;height:2.5rem">
                         <i class="pi pi-comment text-purple-500 text-xl"></i>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">85 </span>
-                <span class="text-500">closed since last 24 hours</span>
+                <span class="text-green-500 font-medium">{{organizationConversationPerformance.closed}} closed </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
             </div>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
             <div class="surface-card shadow-2 p-3 border-round">
                 <div class="flex justify-content-between mb-3">
                     <div>
-                        <span class="block text-500 font-medium mb-3">New Comments</span>
-                        <div class="text-900 font-medium text-xl">152</div>
+                        <span class="block text-500 font-medium mb-3">Avg Resolution Rate</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.resolutionrate}}%</div>
                     </div>
                     <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width:2.5rem;height:2.5rem">
                         <i class="pi pi-inbox text-blue-500 text-xl"></i>
                     </div>
                 </div>
-                <span class="text-green-500 font-medium">85 </span>
-                <span class="text-500">updated since last 24 hours</span>
+                <span class="text-green-500 font-medium"> </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
             </div>
         </div>
+
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">Avg Resolution Time</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.resolutiontime}} hours</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-inbox text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium"> </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
+            </div>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-3">
+            <div class="surface-card shadow-2 p-3 border-round">
+                <div class="flex justify-content-between mb-3">
+                    <div>
+                        <span class="block text-500 font-medium mb-3">Avg Response Time</span>
+                        <div class="text-900 font-medium text-xl">{{organizationConversationPerformance.responsetime}} hours</div>
+                    </div>
+                    <div class="flex align-items-center justify-content-center bg-yellow-100 border-round" style="width:2.5rem;height:2.5rem">
+                        <i class="pi pi-inbox text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+                <span class="text-green-500 font-medium"> </span>
+                <span class="text-500">since last {{selectedConversationMainPeriod.code}}</span>
+            </div>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-3">
+            
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-3">
+            
+        </div>
+
         <div class="col-12 xl:col-6">
             <div class="card">
                 <h5>New Conversations</h5>
@@ -82,7 +145,7 @@
                             <td *ngIf="conversation.contact.name !== ''" style="width: 35%; min-width: 7rem;">{{conversation.contact.name}}</td>
                             <td *ngIf="conversation.contact.name === ''" style="width: 35%; min-width: 7rem;">{{conversation.contact.phone}}</td>
                             <td>
-                                2 Days
+                                {{conversation.sla}} days
                             </td>
                             <td>
                                 <button pButton pRipple [routerLink]="['/chat']" type="button" icon="pi pi-search" class="p-button p-component p-button-text p-button-icon-only"></button>
@@ -91,102 +154,32 @@
                     </ng-template>
                 </p-table>
             </div>
-            <div class="card">
-                <div class="flex justify-content-between align-items-center mb-5">
-                    <h5>Top Conversation Performers</h5>
-                    <p-dropdown 
-                    [options]="intervals" 
-                    [(ngModel)]="selectedConversationPerformerInterval" 
-                    optionLabel="name"
-                    placeholder="Choose Interval" />
-                </div>
-                <ul class="list-none p-0 m-0">
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Ravi</span>
-                        </div>
-                        <div class="mt-2 md:mt-0 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
-                                <div class="bg-orange-500 h-full" [ngStyle]="{width: '100%'}"></div>
-                            </div>
-                            <span class="text-orange-500 ml-3 font-medium">%100</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Raj</span>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
-                                <div class="bg-cyan-500 h-full" [ngStyle]="{width: '80%'}"></div>
-                            </div>
-                            <span class="text-cyan-500 ml-3 font-medium">%80</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Priya</span>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
-                                <div class="bg-pink-500 h-full" [ngStyle]="{width: '70%'}"></div>
-                            </div>
-                            <span class="text-pink-500 ml-3 font-medium">%70</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Venkat</span>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
-                                <div class="bg-green-500 h-full" [ngStyle]="{width: '60%'}"></div>
-                            </div>
-                            <span class="text-green-500 ml-3 font-medium">%60</span>
-                        </div>
-                    </li>
-                    <li class="flex flex-column md:flex-row md:align-items-center md:justify-content-between mb-4">
-                        <div>
-                            <span class="text-900 font-medium mr-2 mb-1 md:mb-0">Deva</span>
-                        </div>
-                        <div class="mt-2 md:mt-0 ml-0 md:ml-8 flex align-items-center">
-                            <div class="surface-300 border-round overflow-hidden w-10rem lg:w-6rem" [ngStyle]="{height: '8px'}">
-                                <div class="bg-purple-500 h-full" [ngStyle]="{width: '50%'}"></div>
-                            </div>
-                            <span class="text-purple-500 ml-3 font-medium">%50</span>
-                        </div>
-                    </li>
-                </ul>
-
-                
-            </div>
+            
         </div>
         
         <div class="col-12 xl:col-6">
             <div class="card">
                 <div class="flex justify-content-between align-items-center">
-                    <h5>Productivity</h5>
+                    <h5>Org Conversation Metrics</h5>
+
                     <p-dropdown 
-                      [options]="intervals" 
-                      [(ngModel)]="selectedConversationTimePeriod" 
-                      placeholder="Select Time Period"
-                      optionLabel="name"
-                      (onChange)="updateChartData()"
-                      optionValue="value"
-                      >
-                    </p-dropdown>                    
+                    [options]="periods" 
+                    [(ngModel)]="selectedOrgConversationPerformerPeriod" 
+                    optionLabel="name"
+                    placeholder="Choose Interval"
+                    (onChange)="loadConversationOrgMetrics()"/>
                 </div>
                 <p-chart
                       type="bar"
-                      [data]="conversationChartData" 
+                      [data]="conversationOrgProductivityChartData" 
                       [options]="conversationChartOptions">
                 </p-chart>
             </div>
-            <div class="card">
+            <!--div class="card">
                 <div class="flex justify-content-between align-items-center mb-5">
                     <h5>Top Task Performers</h5>
                     <p-dropdown 
-                    [options]="intervals" 
+                    [options]="periods" 
                     [(ngModel)]="selectedTaskPerformerInterval" 
                     optionLabel="name"
                     placeholder="Choose Interval" />
@@ -248,6 +241,52 @@
                         </div>
                     </li>
                 </ul>
+            </div-->
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="flex justify-content-between align-items-center mb-5">
+                    <h5>Employee Conversation Metrics</h5>
+                    <div>
+
+                        <p-dropdown 
+                    class="mr-5" 
+                    [options]="employees" 
+                    [(ngModel)]="select_employee_metric" 
+                    optionLabel="name"
+                    placeholder="Choose Emploee"
+                    (onChange)="loadConversationEmploeeMetrics()"
+                    />
+                    <p-dropdown 
+                    [options]="periods" 
+                    [(ngModel)]="selectedConversationPerformerPeriod" 
+                    optionLabel="name"
+                    placeholder="Choose Interval"
+                    (onChange)="loadConversationEmploeeMetrics()"/>
+
+                    </div>
+                    
+                </div>
+
+                <p-chart
+                      type="bar"
+                      [data]="conversationEmployeeProductivityChartData" 
+                      [options]="conversationChartOptions">
+                </p-chart>
+
+                <!--p-chart
+                  type="bar"
+                  [data]="chartData"
+                  [options]="{
+                    responsive: true,
+                    scales: {
+                      x: {
+                        beginAtZero: true,
+                      },
+                    },
+                  }"
+                ></p-chart-->
             </div>
         </div>
         

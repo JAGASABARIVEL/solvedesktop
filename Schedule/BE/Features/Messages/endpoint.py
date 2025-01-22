@@ -1,25 +1,41 @@
+import os
 from threading import Thread
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_cors import cross_origin
-from sqlalchemy import or_
+from sqlalchemy import or_, func, case
 
-from database_schema import IncomingMessage, MessageResponseLog, Conversation, User, UserMessage, Contact
+from database_schema import IncomingMessage, MessageResponseLog, Conversation, User, UserMessage, Contact, Platform
 
-#from Features.Messages import Consumer
+from Features.Messages import ConsumerService
 
 TOPIC = "whatsapp"
 GRP_ID = "whatsapp-grp"
 BOOTSTRAP_SERVER = "localhost:9092"
 
+def read_config():
+  # reads the client configuration from client.properties
+  # and returns it as a key-value map
+  config = {}
+  with open("kafka.config") as fh:
+    for line in fh:
+      line = line.strip()
+      if len(line) != 0 and line[0] != "#":
+        parameter, value = line.strip().split('=', 1)
+        config[parameter] = value.strip()
+  return config
 
 def init_endpoint(app_context, app, Session):
     with app_context:
-        #def start_consumer():
-        #    Consumer(app, topic=TOPIC, group_id=GRP_ID, bootstrap_servers=BOOTSTRAP_SERVER, session=Session).run()
+        def start_consumer():
+            kafka_config = read_config()
+            kafka_config["sasl.username"] = os.getenv("kf_username")
+            kafka_config["sasl.password"] = os.getenv("kf_password")
+            print("kafka_config ", kafka_config)
+            ConsumerService(app, topic=TOPIC, group_id=GRP_ID, config=kafka_config, session=Session).run()
         # Start the consumer in a separate thread
-        #consumer_thread = Thread(target=start_consumer, daemon=True)
-        #consumer_thread.start()
+        consumer_thread = Thread(target=start_consumer, daemon=True)
+        consumer_thread.start()
 
         # Endpoints
         @app.route('/chat/ping', methods=['GET'])
@@ -276,4 +292,383 @@ def init_endpoint(app_context, app, Session):
                 session.add(conversation)
                 session.commit()
                 return jsonify({'id': conversation.id}), 200
+        
+        def get_date_range(filter_type):
+            today = datetime.today()
+            if filter_type == 'daily':
+                # 24-hour period from today
+                start_date = today - timedelta(days=1)  # 1 day ago
+                end_date = today
+            elif filter_type == 'weekly':
+                # 7 days from today (last 7 days)
+                start_date = today - timedelta(days=7)
+                end_date = today
+            elif filter_type == 'monthly':
+                # Last 30 days from today
+                start_date = today - timedelta(days=30)
+                end_date = today
+            elif filter_type == 'quarterly':
+                # Last 3 months (approx 90 days)
+                start_date = today - timedelta(days=90)
+                end_date = today
+            elif filter_type == 'halfyearly':
+                # Last 6 months (approx 180 days)
+                start_date = today - timedelta(days=180)
+                end_date = today
+            elif filter_type == 'yearly':
+                # Last 365 days from today
+                start_date = today - timedelta(days=365)
+                end_date = today
+            else:
+                raise ValueError("Invalid filter type. Must be 'daily', 'weekly', 'monthly', or 'yearly'.")
+            return start_date, end_date
+
+        def get_grouping_interval(filter_type):
+            """
+            Returns the appropriate SQL grouping function based on filter_type (daily, weekly, etc.)
+            """
+            if filter_type == 'daily':
+                return func.date(Conversation.updated_at)  # Group by day
+            elif filter_type == 'weekly':
+                return func.strftime('%Y-%W', Conversation.updated_at)  # Group by week
+            elif filter_type == 'monthly':
+                return func.strftime('%Y-%m', Conversation.updated_at)  # Group by month
+            elif filter_type == 'yearly':
+                return func.strftime('%Y', Conversation.updated_at)  # Group by year
+            elif filter_type == 'quarterly':
+                return func.strftime('%Y-%m', Conversation.updated_at)  # Group by quarter
+            elif filter_type == 'halfyearly':
+                return func.case(
+                    [
+                        (func.strftime('%m', Conversation.updated_at).in_([1, 2, 3, 4, 5, 6]), 'H1'),
+                        (func.strftime('%m', Conversation.updated_at).in_([7, 8, 9, 10, 11, 12]), 'H2'),
+                    ],
+                    else_='Unknown'
+                )  # Group by half-year (H1 or H2)
+            else:
+                raise ValueError('Invalid filter type')
+        
+        def period_labels(label):
+            def parse_week(iso_week):
+                year, week = iso_week.split('-')
+                year, week = int(year), int(week)
+                return f"{year} - Week {week}"
+            period = {
+                'daily': lambda date: f"Day {datetime.strptime(date, '%Y-%m-%d').day}",
+                'weekly': lambda date: parse_week(date),
+                'monthly': lambda date: f"{datetime.strptime(date, '%Y-%m').year} - Month {datetime.strptime(date, '%Y-%m').month}",
+                'yearly': lambda date: f"Y {datetime.strptime(date, '%Y').year}",
+                'quarterly': lambda date: f"{datetime.strptime(date, '%Y-%m').year} - Q{((datetime.strptime(date, '%Y-%m').month - 1) // 3) + 1} {datetime.strptime(date, '%Y-%m').year}" if date is not None else 'Q',
+                'halfyearly': lambda date: 'H1' if datetime.strptime(date, '%m').month <= 6 else 'H2' if date is not None else 'H',
+            }
+            return period[label]
+
+
+        @app.route('/chat/conversations/metrics/org', methods=['GET'])
+        @cross_origin()
+        def get_conversation_metrics_org():
+            organization_id = request.args.get('organization_id')
+            if not organization_id:
+                return jsonify({"error": "Organization Id required"}), 400
+            duration = request.args.get('duration', None)  # 'daily', 'weekly', 'monthly', etc.
+            period = request.args.get('period', 'daily')
+            start_date = request.args.get('start_date')  # Optional: YYYY-MM-DD
+            end_date = request.args.get('end_date')  # Optional: YYYY-MM-DD
+            # Determine the date range based on the filter
+            if duration:
+                try:
+                    start_date, end_date = get_date_range(duration)
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+            if start_date and end_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            print(start_date, end_date)
+            
+            with Session() as session:
+                # Grouping the data by the selected time period
+                grouping_interval = get_grouping_interval(period)
+                # Query for user performance stats grouped by the selected period
+                user_performance_stats = session.query(
+                    grouping_interval.label('period'),
+                    func.count().label('total_assigned'),
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).label('total_closed'),
+                    func.count(case((Conversation.status == 'active', 1), else_=None)).label('total_active')
+                ).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.assigned_user_id != None,
+                    Conversation.updated_at.between(start_date, end_date)
+                ).group_by(
+                    grouping_interval,
+                ).order_by(
+                    grouping_interval,
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).desc()
+                ).all()
+        
+                # Structure the response
+                response = {
+                    'org_performance_stats': [
+                        {
+                            'label': period_labels(period)(stat[0]),  # Convert to readable date format,
+                            'total_assigned': stat[1],
+                            'total_closed': stat[2],
+                            'total_active': stat[3]
+                        }
+                        for stat in user_performance_stats
+                    ]
+                }
+                return jsonify(response)
+        
+        @app.route('/chat/conversations/metrics/employee', methods=['GET'])
+        @cross_origin()
+        def get_conversation_metrics_employee():
+            organization_id = request.args.get('organization_id')
+            if not organization_id:
+                return jsonify({"error": "Organization Id required"}), 400
+            
+            duration = request.args.get('duration', None)  # 'daily', 'weekly', 'monthly', etc.
+            period = request.args.get('period', 'daily')
+            start_date = request.args.get('start_date')  # Optional: YYYY-MM-DD
+            end_date = request.args.get('end_date')  # Optional: YYYY-MM-DD
+            
+            # Determine the date range based on the filter
+            if duration:
+                try:
+                    start_date, end_date = get_date_range(duration)
+                except ValueError as e:
+                    return jsonify({'error': str(e)}), 400
+            if start_date and end_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            print(start_date, end_date)
+            
+            with Session() as session:
+                # Grouping the data by the selected time period
+                grouping_interval = get_grouping_interval(period)
+                print(grouping_interval)
+                
+                # Query for user performance stats grouped by the selected period
+                user_performance_stats = session.query(
+                    grouping_interval.label('period'),
+                    Conversation.assigned_user_id,
+                    func.count().label('total_assigned'),
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).label('total_closed'),
+                    func.count(case((Conversation.status == 'active', 1), else_=None)).label('total_active')
+                ).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.assigned_user_id != None,
+                    Conversation.updated_at.between(start_date, end_date)
+                ).group_by(
+                    grouping_interval,
+                    Conversation.assigned_user_id
+                ).order_by(
+                    grouping_interval,
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).desc()
+                ).all()
+        
+                # Structure the response
+                response = {
+                    'user_performance_stats': [
+                        {
+                            'label': period_labels(period)(stat[0]),  # Convert to readable date format,
+                            'assigned_user_id': stat[1],
+                            'total_assigned': stat[2],
+                            'total_closed': stat[3],
+                            'total_active': stat[4]
+                        }
+                        for stat in user_performance_stats
+                    ]
+                }
+                
+                return jsonify(response)
+
+
+        @app.route('/chat/conversations/stats', methods=['GET'])
+        @cross_origin()
+        def get_conversation_stats():
+            organization_id = request.args.get('organization_id')
+            if not organization_id:
+                return jsonify({"error": "Orgaization Id required"}), 400
+            # Get filter parameters
+            filter_type = request.args.get('filter', 'daily')  # 'daily', 'weekly', 'monthly'
+            start_date = request.args.get('start_date')  # Optional: YYYY-MM-DD
+            end_date = request.args.get('end_date')  # Optional: YYYY-MM-DD
+            # Determine the date range based on the filter
+            try:
+                start_date, end_date = get_date_range(filter_type)
+            except ValueError as e:
+                return jsonify({'error': str(e)}), 400
+            # Parse dates if provided as strings
+            if isinstance(start_date, str):
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            if isinstance(end_date, str):
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            with Session() as session:
+                print(start_date, end_date)
+                # Query the database
+                total_new = session.query(func.count()).filter(
+                    Conversation.organization_id == organization_id,
+                ).scalar()
+                total_closed = session.query(func.count()).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.status == 'closed',
+                    Conversation.updated_at.between(start_date, end_date)
+                ).scalar()
+                total_active = session.query(func.count()).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.status == 'active',
+                    Conversation.updated_at.between(start_date, end_date)
+                ).scalar()
+
+                # Per contact_id stats (frequency of communication and services used)
+                per_contact_stats = session.query(
+                    Conversation.contact_id,
+                    func.count().label('communication_count'),
+                    func.count(func.distinct(Conversation.platform_id)).label('services_used')
+                ).filter(Conversation.organization_id == organization_id, Conversation.updated_at.between(start_date, end_date)).group_by(Conversation.contact_id).all()
+                # Services used breakdown by platform_id for each contact_id
+                services_used_stats = session.query(
+                    Conversation.contact_id,
+                    Platform.platform_name,
+                    func.count().label('conversation_count')
+                ).join(
+                    Platform, Platform.id == Conversation.platform_id
+                ).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.updated_at.between(start_date, end_date)
+                ).group_by(
+                    Conversation.contact_id,
+                    Platform.platform_name
+                ).all()
+
+                # Performance stats queries here, using start_date and end_date
+                user_performance_stats = session.query(
+                    Conversation.assigned_user_id,
+                    func.count().label('total_active'),
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).label('total_closed'),
+                    func.count(case((Conversation.status == 'active', 1), else_=None)).label('total_active')
+                ).filter(
+                    Conversation.organization_id == organization_id,
+                    Conversation.assigned_user_id != None,
+                    Conversation.updated_at.between(start_date, end_date)
+                ).group_by(
+                    Conversation.assigned_user_id
+                ).order_by(
+                    func.count(case((Conversation.status == 'closed', 1), else_=None)).desc()
+                ).all()
+
+                # Average response time
+                average_response_time = session.query(
+                    func.avg(
+                        (func.julianday(UserMessage.sent_time) - func.julianday(IncomingMessage.received_time)) * 86400
+                    ).label("average_response_time")
+                ).select_from(
+                    IncomingMessage
+                ).join(
+                    UserMessage,
+                    UserMessage.conversation_id == IncomingMessage.conversation_id
+                ).filter(
+                    IncomingMessage.received_time.between(start_date, end_date),
+                    UserMessage.sent_time > IncomingMessage.received_time
+                ).scalar()
+
+                response_time_per_employee = session.query(
+                    UserMessage.user_id,
+                    func.avg(
+                        (func.julianday(UserMessage.sent_time) - func.julianday(IncomingMessage.received_time)) * 86400
+                    ).label("average_response_time")
+                ).select_from(
+                    IncomingMessage
+                ).join(
+                    UserMessage, UserMessage.conversation_id == IncomingMessage.conversation_id
+                ).filter(
+                    UserMessage.sent_time > IncomingMessage.received_time,
+                    IncomingMessage.received_time.between(start_date, end_date)
+                ).group_by(
+                    UserMessage.user_id
+                ).all()
+
+                # Resolution time
+                subquery = session.query(
+                    Conversation.assigned_user_id,
+                    (func.count(case((Conversation.status == 'closed', 1), else_=None)) * 1.0 /
+                     func.count(Conversation.id)).label('resolution_rate')
+                ).filter(
+                    Conversation.assigned_user_id != None,
+                    Conversation.updated_at.between(start_date, end_date)
+                ).group_by(
+                    Conversation.assigned_user_id
+                ).subquery()
+                
+                # Main query: Calculate the average resolution rate
+                average_resolution_rate = session.query(
+                    func.avg(subquery.c.resolution_rate).label('average_resolution_rate')
+                ).scalar()
+
+
+                # Subquery to calculate resolution time for each conversation
+                resolution_time_subquery = session.query(
+                    Conversation.id.label('conversation_id'),
+                    ((func.julianday(func.max(UserMessage.sent_time)) - func.julianday(func.min(IncomingMessage.received_time))) * 86400)
+                    .label('resolution_time')
+                ).join(
+                    IncomingMessage, IncomingMessage.conversation_id == Conversation.id
+                ).join(
+                    UserMessage, UserMessage.conversation_id == Conversation.id
+                ).filter(
+                    Conversation.status == 'closed',  # Only closed conversations
+                    IncomingMessage.received_time.between(start_date, end_date)  # Date range filter
+                ).group_by(Conversation.id).subquery()
+                
+                # Main query to calculate the average resolution time
+                average_resolution_time = session.query(
+                    func.avg(resolution_time_subquery.c.resolution_time).label('average_resolution_time')
+                ).scalar()
+
+                # Subquery to calculate resolution time for each conversation per employee
+                resolution_time_per_employee_subquery = session.query(
+                    UserMessage.user_id,
+                    ((func.julianday(func.max(UserMessage.sent_time)) - func.julianday(func.min(IncomingMessage.received_time))) * 86400)
+                    .label('resolution_time')
+                ).join(
+                    IncomingMessage, IncomingMessage.conversation_id == UserMessage.conversation_id
+                ).filter(
+                    Conversation.status == 'closed',  # Only closed conversations
+                    IncomingMessage.received_time.between(start_date, end_date)  # Date range filter
+                ).group_by(UserMessage.user_id, UserMessage.conversation_id).subquery()
+
+                # Main query to calculate average resolution time per employee
+                resolution_time_per_employee = session.query(
+                    resolution_time_per_employee_subquery.c.user_id,
+                    func.avg(resolution_time_per_employee_subquery.c.resolution_time).label('average_resolution_time')
+                ).group_by(resolution_time_per_employee_subquery.c.user_id).all()
+
+                # Structure the response
+                response = {
+                    'total_new': total_new,
+                    'total_closed': total_closed,
+                    'total_active': total_active,
+                    'customer_performance_stats': [
+                        {
+                            'contact_id': stat[0],
+                            'services_used': [
+                                {'platform_name': platform_name, 'conversation_count': count}
+                                for (contact_id, platform_name, count) in services_used_stats if contact_id == stat[0]
+                            ]
+                        }
+                        for stat in per_contact_stats
+                    ],
+                    'user_performance_stats': [
+                        {'user_id': stat[0], 'total_active': stat[1], 'total_closed': stat[2]}
+                        for stat in user_performance_stats
+                    ],
+                    'user_performance_stats_avg': {
+                        'average_response_time': round((average_response_time / (60 * 60)), 2) if average_response_time is not None else 0,
+                        'response_time_per_employee': [{'user_id': resp_time[0], 'avg': resp_time[1]} for resp_time in response_time_per_employee],
+                        'average_resolution_rate': round(average_resolution_rate, 2) * 100 if average_resolution_rate is not None else 0,
+                        'average_resolution_time': round((average_resolution_time / (60 * 60)), 2) if average_resolution_time is not None else 0,
+                        'resolution_time_per_employee': [{'user_id': res_time[0], 'avg': res_time[1]} for res_time in resolution_time_per_employee]                        
+                    }
+                }
+                return jsonify(response)
     return app

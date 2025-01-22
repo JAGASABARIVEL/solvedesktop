@@ -59,6 +59,9 @@ const CONVERSATION_RESPOND = "/respond"
 const CONVERSATION_ASSIGN = "/assign"
 const CONVERSATION_CLOSE = "/close"
 const CONVERSATION_OPEN = "/new"
+const CONVERSATION_STAT = "/stats"
+const CONVERSATION_METRICS_EMP = "/metrics/employee"
+const CONVERSATION_METRICS_ORG = "/metrics/org"
 const CONVERSATION_UNASSIGNED_URI = "";
 
 export class Url {
@@ -216,6 +219,18 @@ export class ConversationUrl extends Url {
 
     get new() {
         return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_OPEN}`
+    }
+
+    get stat() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_STAT}`
+    }
+
+    get getMetricsEmployee() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_METRICS_EMP}`
+    }
+
+    get getMetricsOrg() {
+        return `${this.url}${CHAT_URI}${CONVERSATIONS_URI}${CONVERSATION_METRICS_ORG}`
     }
 }
 

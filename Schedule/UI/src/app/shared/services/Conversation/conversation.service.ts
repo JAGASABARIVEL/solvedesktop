@@ -43,7 +43,31 @@ export class ConversationService {
     return this.http.post(`${this.conversationUrl.close}/${conversationid}`, payload);
   }
 
-  new(payload) {
+  new(payload): Observable<any>  {
     return this.http.post(`${this.conversationUrl.new}`, payload);
+  }
+
+  stat(param): Observable<any>  {
+    let httpParams = new HttpParams();
+    Object.keys(param).forEach(key => {
+      httpParams = httpParams.append(key, param[key].toString());
+    })
+    return this.http.get(this.conversationUrl.stat, {params: httpParams});
+  }
+
+  emploeeMetrics(param): Observable<any>  {
+    let httpParams = new HttpParams();
+    Object.keys(param).forEach(key => {
+      httpParams = httpParams.append(key, param[key].toString());
+    })
+    return this.http.get(this.conversationUrl.getMetricsEmployee, {params: httpParams});
+  }
+
+  orgMetrics(param): Observable<any>  {
+    let httpParams = new HttpParams();
+    Object.keys(param).forEach(key => {
+      httpParams = httpParams.append(key, param[key].toString());
+    })
+    return this.http.get(this.conversationUrl.getMetricsOrg, {params: httpParams});
   }
 }
