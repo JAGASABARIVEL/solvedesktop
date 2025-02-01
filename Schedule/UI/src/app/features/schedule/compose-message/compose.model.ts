@@ -10,6 +10,7 @@ export interface ComposeMessageModel {
     uploaded_excel: File,
     organization_id: number,
     platform: number,
+    frequency: number,
     user_id: number,
     recipient_type: string,
     recipient_id: number,

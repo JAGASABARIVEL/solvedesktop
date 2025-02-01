@@ -1,0 +1,36 @@
+/* not-found.component.css */
+.not-found-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 50vh;
+    background-color: #f9f9f9;
+  }
+  
+  p-card {
+    max-width: 400px;
+    text-align: center;
+  }
+  
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .header-content h1 {
+    margin: 0;
+    font-size: 3rem;
+    color: #333;
+  }
+  
+  .body-content {
+    margin-top: 1rem;
+  }
+  
+  .body-content p {
+    margin: 0 0 1rem 0;
+    color: #666;
+    font-size: 1rem;
+  }
+  

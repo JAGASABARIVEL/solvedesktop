@@ -12,7 +12,8 @@ class PlatformLog(db.Model):
     recipient_id = db.Column(db.Integer, db.ForeignKey('contact.id', ondelete='CASCADE'), nullable=False)
     scheduled_message_id = db.Column(db.Integer, db.ForeignKey('scheduled_message.id', ondelete='CASCADE'), nullable=False)
     log_message = db.Column(db.String(200))
-    direction = db.Column(db.String(20), nullable=False, default='outgoing')  # 'incoming' or 'outgoing'
+    messageid = db.Column(db.String(200), nullable=True, default=None)
+    status = db.Column(db.String(20), nullable=False, default='success')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Platform(db.Model):
@@ -38,6 +39,7 @@ class Organization(db.Model):
     )  # Break the cascading delete cycle by setting to NULL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    robo_name = db.Column(db.String(100), unique=True, nullable=False)
     # Relationships
     users = db.relationship('User', back_populates='organization')
     contacts = db.relationship('Contact', back_populates='organization')
@@ -72,6 +74,7 @@ class User(db.Model):
     password = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    uuid = db.Column(db.Text, nullable=True)
     # Relationships
     contacts = db.relationship('Contact', back_populates='creator')
     contact_groups = db.relationship('ContactGroup', back_populates='creator')
@@ -133,7 +136,7 @@ class ScheduledMessage(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     recipient_type = db.Column(db.String(20), nullable=False)  # 'individual', 'group'
     recipient_id = db.Column(db.Integer, nullable=False)  # Contact ID or Group ID
-    frequency = db.Column(db.Integer, default=0)  # Contact ID or Group ID
+    frequency = db.Column(db.Integer, default=-1)  # Contact ID or Group ID
     message_body = db.Column(db.Text, nullable=False)
     platform = db.Column(
         db.Integer, 
@@ -143,10 +146,12 @@ class ScheduledMessage(db.Model):
     scheduled_time = db.Column(db.DateTime, nullable=False)
     datasource = db.Column(db.JSON, nullable=True)  # Store the entire datasource configuration
     excel_filename = db.Column(db.String, nullable=True)  # Store the unique filename of the Excel file
-    status = db.Column(db.String(20), default='scheduled')  # 'scheduled', 'sent', 'canceled', 'failed'
+    status = db.Column(db.String(20), default='scheduled')  # 'scheduled', 'canceled', 'failed'
+    msg_status = db.Column(db.String(20), default='') # 'sent_to_server', 'delivered', 'read', 'sent', 'failed'
     sent_time = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    messageid = db.Column(db.Text, nullable=True)
 
     __table_args__ = (
         UniqueConstraint('name', 'organization_id', name='unique_name_per_organization'),
@@ -164,8 +169,9 @@ class Conversation(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     open_by = db.Column(db.String(20), default='customer')  # 'active', 'closed'
     closed_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
-    closed_reason = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    closed_reason = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='new')  # 'active', 'closed'
+    
 
 class IncomingMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -176,6 +182,7 @@ class IncomingMessage(db.Model):
     message_body = db.Column(db.Text, nullable=False)
     received_time = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), nullable=False, default='unread')  # 'unread', 'read', 'responded'
+    status_details = db.Column(db.Text, nullable=True) # Placeholder for now
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -185,6 +192,7 @@ class IncomingMessage(db.Model):
             'received_time': self.received_time.isoformat() if self.received_time else None,  # Convert datetime to ISO 8601 string
             'message_body': self.message_body,
             'status': self.status,
+            "status_details": self.status_details,
             'type': 'customer'
         }
 
@@ -198,6 +206,8 @@ class UserMessage(db.Model):
     sent_time = db.Column(db.DateTime, default=datetime.utcnow)
     # TODO: This would be helpful if the message actually sent from watsapp server(webhook notification)
     status = db.Column(db.String(50), nullable=True)
+    status_details = db.Column(db.Text, nullable=True)
+    messageid = db.Column(db.Text, nullable=True)
 
 class MessageResponseLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -300,3 +310,18 @@ class TaskComment(db.Model):
             'comment_body': self.comment_body,
             'created_at': self.created_at.isoformat() if self.created_at else None,  # Convert datetime to ISO 8601 string
         }
+
+
+############ Keylogger Model ############
+class KeyLogger(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
+    emp_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=False)
+    date = db.Column(db.Text, nullable=False)
+    app_details = db.Column(db.Text, nullable=False)
+    idle_time = db.Column(db.Integer, nullable=False)
+
+class Uuid(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    organization_id = db.Column(db.Integer, db.ForeignKey('organization.id', ondelete='CASCADE'), nullable=False)
+    uuid = db.Column(db.Text, unique=True, nullable=False)

@@ -315,6 +315,40 @@
   background-color: #0b8065;
 }
 
+.status-icon {
+  margin-left: 5px;
+  font-size: 14px;
+  color: gray;
+  display: inline-flex;
+}
+
+.double-tick {
+  font-size: 12px; 
+  position: relative;
+  color: #8696a0; /* Default gray */
+}
+
+.first-tick {
+  left: 0px;
+}
+
+.second-tick {
+  left: -5px; /* Move the second tick slightly back */
+}
+
+.read {
+  color: #53bdeb !important; /* Blue ticks when message is read */
+}
+
+.failed-icon {
+  color: #f15c5c;;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+
+
+
 
 /* Red Line and Centered Text */
 .status-marker {

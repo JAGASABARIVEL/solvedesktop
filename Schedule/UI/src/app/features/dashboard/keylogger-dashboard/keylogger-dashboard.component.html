@@ -1,0 +1,93 @@
+<div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+    <div class="grid">
+        <div class="col-12">
+            <div class="flex align-items-center justify-content-end mb-3">
+                    <p-select 
+                        [options]="employeeOptions" 
+                        [(ngModel)]="selectedEmployee" 
+                        styleClass="p-2"
+                        class="mr-4"
+                        [placeholder]="!selectedEmployee?.name ? 'Select Emploee' :  selectedEmployee?.name"
+                        optionLabel="name">
+                    </p-select>
+                <p-floatlabel>
+                    <p-datepicker 
+                    styleClass="p-2"
+                    class="mr-4"
+                    [(ngModel)]="selectedDate" 
+                    dateFormat="yy-mm-dd" 
+                    id="select_date_range"
+                    />
+                <label for="select_date_range">Select Date</label>
+                </p-floatlabel>
+                <p-button label="Submit" (click)="applyFilters()"></p-button>
+            </div>
+        </div>
+
+        <div class="col-6">
+            <div class="card">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>Productivity Distribution</h5>
+                </div>
+                <!-- Pie Chart -->
+                <p-chart
+                    type="pie"
+                    [data]="appUsagePieChartData"
+                    [options]="chartOptions">
+                </p-chart>
+            </div>
+
+            <div class="card">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>App Productivity</h5>
+                </div>
+                <!-- Pie Chart -->
+                <p-chart
+                    type="bar"
+                    [data]="keystrokeBarChartData"
+                    [options]="chartOptions">
+                </p-chart>
+            </div>
+
+        </div>
+        <div class="col-6">
+            <div class="card">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>Idle Vs Active time</h5>
+                </div>
+                <!-- Add Gauge Chart -->
+                <p-chart
+                  type="doughnut"
+                  [data]="idleTimeGaugeChartData"
+                  [options]="gaugeChartOptions">
+                </p-chart>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>Productivity Report</h5>
+                </div>
+                <!-- Table Summary -->
+                <p-table [value]="reportSummary" [paginator]="true" [rows]="5" [responsiveLayout]="'scroll'">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th pSortableColumn="name">
+                            Application <p-sortIcon field="name" />
+                        </th>
+                        <th pSortableColumn="keystrokes">
+                            Keystrokes <p-sortIcon field="keystrokes" />
+                        </th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-data>
+                      <tr>
+                        <td>{{ data.name }}</td>
+                        <td>{{ data.keystrokes }}</td>
+                      </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+    </div>
+    </div>
+</div>

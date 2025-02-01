@@ -1,0 +1,21 @@
+<!-- error-page.component.html -->
+<div class="error-container">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="header-content">
+          <i class="pi pi-times-circle" style="font-size: 2rem; color: #E53935;"></i>
+          <h1>Submission Failed</h1>
+        </div>
+      </ng-template>
+      <div class="body-content">
+        <p>Oops! Something went wrong while submitting your data. Please try again later.</p>
+        <p-button 
+          label="Go to Home" 
+          icon="pi pi-home" 
+          styleClass="p-button-raised p-button-primary" 
+          routerLink="/">
+        </p-button>
+      </div>
+    </p-card>
+  </div>
+  

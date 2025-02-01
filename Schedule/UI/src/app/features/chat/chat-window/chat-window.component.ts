@@ -21,6 +21,9 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmPopupModule } from 'primeng/confirmpopup'; 
 import { PlatformService } from '../../../shared/services/Platform/platform.service';
 import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
+import { query } from '@angular/animations';
+import { SelectModule } from 'primeng/select';
 
 
 @Component({
@@ -31,6 +34,7 @@ import { DialogModule } from 'primeng/dialog';
     FormsModule,
     ReactiveFormsModule,
 
+    TooltipModule,
     AvatarModule,
     CardModule,
     InputTextModule,
@@ -38,7 +42,7 @@ import { DialogModule } from 'primeng/dialog';
     CardModule,
     BadgeModule,
     ToastModule,
-    DropdownModule,
+    SelectModule,
     DialogModule,
     ConfirmPopupModule
   ],
@@ -62,6 +66,7 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
   loadContactId = undefined;
 
   profile !: any;
+  robo_profile !: any;
 
   employees: any[];
   users: any[] = []; // Replace with your fetched user list
@@ -91,9 +96,15 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
 
     ngOnInit() {
       this.profile = JSON.parse(localStorage.getItem('me'));
+      
       if (!this.profile) {
         this.router.navigate(['login']);
       }
+      this.robo_profile = this.organizationService.fetch_robo_detail(this.profile.organization).subscribe(
+        (robo_detail) => {
+          this.robo_profile = robo_detail;
+        }
+      );
       this.loadRegisteredPlatforms();
       this.susbscribeAssignemntChangeEvent();
       this.loadContacts();
@@ -158,11 +169,19 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
 
     filterContacts() {
       const query = this.searchQuery.toLowerCase();
+
       this.filteredUsers = this.users.filter(user =>
         user.name.toLowerCase().includes(query) || 
         user.phone.toLowerCase().includes(query)
       );
-      if (this.filteredUsers.length === 0) {
+      // When the user removes the search text while there is no active conversation
+      if (query.length === 0 && !this.activeUser) {
+        this.filteredUsers = this.filteredUsers
+      }
+      else if (query.length === 0 && this.activeUser && this.filteredUsers.length === 0) {
+        this.filteredUsers = [this.activeUser];
+      }
+      else if (query.length > 0 && this.filteredUsers.length === 0) {
         this.filteredUsers = this.all_contacts.filter(user =>
           user.name.toLowerCase().includes(query) || 
           user.phone.toLowerCase().includes(query)
@@ -184,34 +203,49 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       this.messageSubscription = this.socketService.getMessages().subscribe((message) => {
         console.log('Received message:', message);
         console.log("this.users ", this.users);
-        const user = this.users.find((user) => user.conversationId === message.conversation_id);
-        if (user) {
-          user.messages.push(message);
-        } else {
-          console.warn(`User with conversationId ${message.conversation_id} not found.`);
-          this.assignmentEventService.emitNewConversation("New conversation");
-          //this.conversationService.getConversationFromId(
-          //  message.conversation_id,
-          //  {"assignee": this.profile.id}
-          //).subscribe((conv) => {
-          //  this.users.push(
-          //  {
-          //    id: conv.contact.id,
-          //    name: conv.contact.name,
-          //    phone: conv.contact.phone,
-          //    conversationId: conv.conversation_id,
-          //    messages: conv.messages,
-          //    img: 'http://emilcarlsson.se/assets/louislitt.png', // You can replace this with actual avatar if available
-          //    status: conv.status,
-          //});
-          //  this.filteredUsers = [...this.users]; // Initially display all users
-          //  console.log("Reloaded the conversation for active user");
-          //});
+        if (message.msg_from_type === "CUSTOMER") {
+          const user = this.users.find((user) => user.conversationId === message.conversation_id);
+          if (user) {
+            user.messages.push(message);
+          } else {
+            console.warn(`User with conversationId ${message.conversation_id} not found.`);
+            this.assignmentEventService.emitNewConversation("New conversation");
+            //this.conversationService.getConversationFromId(
+            //  message.conversation_id,
+            //  {"assignee": this.profile.id}
+            //).subscribe((conv) => {
+            //  this.users.push(
+            //  {
+            //    id: conv.contact.id,
+            //    name: conv.contact.name,
+            //    phone: conv.contact.phone,
+            //    conversationId: conv.conversation_id,
+            //    messages: conv.messages,
+            //    img: 'http://emilcarlsson.se/assets/louislitt.png', // You can replace this with actual avatar if available
+            //    status: conv.status,
+            //});
+            //  this.filteredUsers = [...this.users]; // Initially display all users
+            //  console.log("Reloaded the conversation for active user");
+            //});
+          }
+          this.updateNewConversationList();
+          console.log("this.users ", this.users);
+          this.scrollToBottom();
+          //this.messages.push(message); // Add the received message to the messages array
         }
-        this.updateNewConversationList();
-        console.log("this.users ", this.users);
-        this.scrollToBottom();
-        //this.messages.push(message); // Add the received message to the messages array
+        else if (message.msg_from_type === "ORG") {
+          // Reload specific conversation since we have a notification that the message status has been updated
+          // for one of the message in this conversation.
+          const user = this.users.find((user) => user.conversationId === message.conversation_id);
+          if (user) {
+            this.conversationService.getConversationFromId(
+              user.conversationId,
+              {"assignee": this.profile.id}
+            ).subscribe((conv) => {
+              user.messages = conv.messages;
+            });
+          }
+        }
       });
     }
 
@@ -243,44 +277,62 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
     loadHistoricalConversation() {
       this.loadContactId = this.activeUser.id;
       console.log("this.activeUser.id ", this.activeUser.id);
-      this.conversationService.getAllConversations(
-        {
-          "organization_id": this.profile.organization,
-          "contact_id": this.activeUser.id,
-          "conversation_status": "new,closed,active"
-        }
-      ).subscribe(
+    
+      this.conversationService.getAllConversations({
+        "organization_id": this.profile.organization,
+        "contact_id": this.activeUser.id,
+        "conversation_status": "new,closed,active"
+      }).subscribe(
         (convs) => {
           console.log("History data ", convs);
-          let user = this.users.find((us)=> us.id === this.loadContactId);
+    
+          let user = this.users.find((us) => us.id === this.loadContactId);
           if (!user) {
             user = this.all_contacts.find((us) => us.id === this.loadContactId);
           }
-          let conv_messages = []
+    
+          let conv_messages: any[] = [];
+    
           convs.forEach((conv) => {
+            // Add start_tag
             conv_messages.push({
               'type': 'start_tag',
               'by': conv.open_by,
-              'reason': conv.open_by === 'customer' ? 'Customer Query' : 'Organization Query' 
+              'reason': conv.open_by === 'customer' ? 'Customer Query' : 'Organization Query',
+              'timestamp': new Date(conv.created_at).getTime()
             });
-            conv_messages.push(conv.messages);
+    
+            // Extract and normalize messages
+            conv.messages.forEach((msg: any) => {
+              conv_messages.push({
+                ...msg,
+                'timestamp': msg.sent_time ? new Date(msg.sent_time).getTime() : new Date(msg.received_time).getTime()
+              });
+            });
+    
+            // Add end_tag if conversation is closed
             if (conv.status === 'closed') {
               conv_messages.push({
                 'type': 'end_tag',
-                'by': this.getEmployeeNameFromId(conv.closed_by).name,
-                'reason': conv.closed_reason
+                'by': this.getEmployeeNameFromId(conv.closed_by)?.name || "Unknown",
+                'reason': conv.closed_reason,
+                'timestamp': new Date(conv.created_at).getTime() + 1 // Ensure it appears at the end
               });
             }
           });
-          user.messages = this.getFlattenedMessages(conv_messages);
-          //this.users[this.activeUser.id].messages = user.messages;
+    
+          // Sort messages chronologically
+          conv_messages.sort((a, b) => a.timestamp - b.timestamp);
+    
+          user.messages = conv_messages;
           console.log("this.users ", this.users);
         },
         (err) => {
           console.log("Chat window | Error getting historical conversations ", err);
         }
-      )
+      );
     }
+    
 
     getCardBackgroundColor(user: any): string {
       if (user.id === this.activeUser.id) {
@@ -415,6 +467,14 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
         user_id: this.profile.id
       }
 
+      let msg_text = input.value;
+      this.activeUser.status = 'active' // In case the conversation is already closed
+      this.activeUser.messages.push({message_body: msg_text, sender: this.profile.id, sent_time : Date(),  status : "unknown", type: "org"});
+      input.value = '';
+      this.searchQuery = '';
+
+
+
       this.conversationService.respond(
         this.conversationResponse
       ).subscribe((data) => {
@@ -441,6 +501,25 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       },
       (err) => {
         console.log("Message failed ", err);
+        this.conversationService.getConversationFromId(
+          this.activeUser.conversationId,
+          {"assignee": this.profile.id}
+        ).subscribe((conv) => {
+          this.activeUser.status = 'active' // In case the conversation is already closed
+          this.activeUser.messages = conv.messages;
+          this.updateNewConversationList();
+          this.moveUserConversationToTop(this.activeUser);
+          // Clear the serach query for usability since we don';t know when to clear
+          // the query since user can simply search as well but here its guranteed he/she
+          // could have finalized the search and sent the message.
+          // Note: This is neat since we are also resetting the filterUsers
+          //       through moveUserConversationToTop
+          this.searchQuery = '';
+
+          input.value = '';
+          this.scrollToBottom();
+          console.log("Reloaded the conversation for active user");
+        });
       }
       );
     }
@@ -467,11 +546,12 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
         this.closeConversationVisible = false;
         console.log("Conversation closed ", data);
         //this.sortUserConversationsByStatus();
-        this.updateNewConversationList();
+        //this.updateNewConversationList();
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Conversation closed successfully' });
-        this.deleteSpecificConversation(this.activeUser);
-        this.refreshFilterList();
+        //this.deleteSpecificConversation(this.activeUser);
+        //this.refreshFilterList();
         this.loadContacts();
+        this.loadConversations()
       });
     }
 

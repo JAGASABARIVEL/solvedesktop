@@ -4,10 +4,16 @@ from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_cors import cross_origin
 from sqlalchemy import or_, func, case
+import traceback
 
 from database_schema import IncomingMessage, MessageResponseLog, Conversation, User, UserMessage, Contact, Platform
 
 from Features.Messages import ConsumerService
+
+from VendorApi.Whatsapp import SendException, WebHookException
+from VendorApi.Whatsapp.message import TextMessage
+
+REG_APP_NAME = "conversation"
 
 TOPIC = "whatsapp"
 GRP_ID = "whatsapp-grp"
@@ -28,9 +34,10 @@ def read_config():
 def init_endpoint(app_context, app, Session):
     with app_context:
         def start_consumer():
+            # TODO: Remove the hardcoded credentials of kafka
             kafka_config = read_config()
-            kafka_config["sasl.username"] = os.getenv("kf_username")
-            kafka_config["sasl.password"] = os.getenv("kf_password")
+            kafka_config["sasl.username"] = "BEYSO2BBJN5YQNPI" #os.getenv("kf_username")
+            kafka_config["sasl.password"] = "yzngow9zRBIQg9nPvxoAzE2LvSv1B7vq036UBtodOFLbL0TZT54ntWuS5om8da37" #os.getenv("kf_password")
             print("kafka_config ", kafka_config)
             ConsumerService(app, topic=TOPIC, group_id=GRP_ID, config=kafka_config, session=Session).run()
         # Start the consumer in a separate thread
@@ -75,6 +82,7 @@ def init_endpoint(app_context, app, Session):
                             'type': 'customer',
                             'message_body': msg.message_body,
                             'status': msg.status,
+                            'status_details': msg.status_details,
                             'received_time': msg.received_time
                         }
                         for msg in incoming_msgs
@@ -87,6 +95,7 @@ def init_endpoint(app_context, app, Session):
                             'type': 'org',
                             'message_body': msg.message_body,
                             'status': msg.status,
+                            'status_details': msg.status_details,
                             'sent_time': msg.sent_time,
                             'sender': msg.user_id
                         }
@@ -162,6 +171,7 @@ def init_endpoint(app_context, app, Session):
                         'type': 'customer',
                         'message_body': msg.message_body,
                         'status': msg.status,
+                        'status_details': msg.status_details,
                         'received_time': msg.received_time
                     }
                     for msg in incoming_msgs
@@ -174,6 +184,7 @@ def init_endpoint(app_context, app, Session):
                         'type': 'org',
                         'message_body': msg.message_body,
                         'status': msg.status,
+                        'status_details': msg.status_details,
                         'sent_time': msg.sent_time,
                         'sender': msg.user_id
                     }
@@ -217,6 +228,45 @@ def init_endpoint(app_context, app, Session):
                 session.commit()
                 return jsonify({'message': 'Conversation assigned successfully', 'conversation_id': conversation.id, 'assigned_user_id': user_id})
 
+        # Placeholder for platform-specific message sending
+        def send_message(platform_id, recipient_id, message_body):
+            with Session() as session:
+                try:
+                    platform = session.query(Platform).filter_by(id=platform_id).first()
+                    platform_name = platform.platform_name
+                    phone_number_id = platform.login_id
+                    token = platform.login_credentials
+                    recipient_phone_number = session.query(Contact.phone).filter_by(id=recipient_id).first()[0]
+                    #TODO: Fetch credetials for the specific platform as well
+                    if platform_name.startswith('whatsapp'):
+                        # Add WhatsApp API integration logic here
+                        print(
+                            "Message Sent!!\n",
+                            "Platform : ", platform_name, "\n",
+                            "Login Id : ", phone_number_id, "\n", 
+                            "From Key : ", token, "\n",
+                            "Recipient : ", recipient_phone_number, "\n",
+                            "Message : ", message_body, "\n"
+                        )
+                        # Send WhatsApp message
+                        if phone_number_id:
+                            text_message = TextMessage(
+                                phone_number_id=phone_number_id,
+                                token=token,
+                                client_application=REG_APP_NAME
+                            )
+                            response = text_message.send_message(recipient_phone_number, message_body)
+                            print("sent message to whatsapp ", response.content)
+                            return response
+                    else:
+                        raise ValueError("Unsupported platform")
+                except WebHookException as webhook_error:
+                    raise RuntimeError(f"Webhook error - failed to read notification: {str(webhook_error)}")
+                except SendException as send_error:
+                    raise RuntimeError(f"Whatsapp error - failed to send message: {str(send_error)}")
+                except Exception as e:
+                    raise RuntimeError(f"Failed to send message: {str(e)}")
+
         @app.route('/chat/conversations/respond', methods=['POST'])
         @cross_origin()
         def respond_to_message():
@@ -225,7 +275,8 @@ def init_endpoint(app_context, app, Session):
             message_body = data.get('message_body')
             user_id = data.get('user_id')
             # TODO: Update the status after checking the webhook notification
-            status = "sent"
+            status = "sent_to_server"
+            response = None
             with Session() as session:
                 conversation = session.query(Conversation).filter_by(id=conversation_id).first()
                 if not conversation:
@@ -233,19 +284,38 @@ def init_endpoint(app_context, app, Session):
                 # Incase conversation closed already
                 conversation.status = 'active'
                 session.commit()
+                try:
+                    response = send_message(
+                        platform_id=conversation.platform_id,
+                        recipient_id=conversation.contact_id,
+                        message_body=message_body
+                    )
+                    response = response.json()
+                except Exception as send_ex:
+                    user_message = UserMessage(
+                        conversation_id=conversation.id,
+                        organization_id=conversation.organization_id,
+                        platform_id=conversation.platform_id,
+                        user_id=user_id,
+                        message_body=message_body,
+                        status='failed',
+                        status_details = str(send_ex),
+                        messageid="Cannot send"
+                    )
+                    session.add(user_message)
+                    session.commit()
+                    print(send_ex)
+                    return jsonify({'status': 'error', 'message': 'Conversation - Could not deliver the message'}), 500
                 user_message = UserMessage(
                     conversation_id=conversation.id,
                     organization_id=conversation.organization_id,
                     platform_id=conversation.platform_id,
                     user_id=user_id,
                     message_body=message_body,
-                    status=status
+                    status=status,
+                    messageid=response['messages'][0].get('id')
                 )
                 session.add(user_message)
-                # TODO: Update the status after checking the webhook notification
-                session.query(IncomingMessage).filter_by(conversation_id=conversation_id).update(
-                    {"status": "responded"}
-                )
                 session.commit()
                 return jsonify({'status': 'success', 'message': 'Response logged successfully'}), 200
         
@@ -262,6 +332,10 @@ def init_endpoint(app_context, app, Session):
                 conversation.closed_by = closed_by
                 conversation.closed_reason = closed_reason
                 conversation.status = 'closed'
+                # Update the status after checking the webhook notification
+                session.query(IncomingMessage).filter_by(conversation_id=conversation_id).update(
+                    {"status": "responded"}
+                )
                 session.commit()
                 return jsonify({'status': 'success', 'message': 'Conversation closed successfully'}), 200
 

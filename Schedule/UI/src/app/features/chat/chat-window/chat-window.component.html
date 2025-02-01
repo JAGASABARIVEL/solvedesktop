@@ -12,7 +12,7 @@
         </div>
 </p-dialog>
 
-<div *ngIf="activeUser?.phone" class="whatsapp-container">
+<div class="whatsapp-container">
 	<!-- Sidebar -->
 	<div class="sidebar">
 	  <!-- Profile Section -->
@@ -47,8 +47,10 @@
 	  >
 		<div class="wrap">
 		  <!--img [src]="user.img" alt="User Image" class="user-img" /-->
-		  <p-avatar label="{{user.name | slice:0:1}}" size="large">
+		  <p-avatar *ngIf="user.name" label="{{user.name | slice:0:1}}" size="large">
 		  </p-avatar>
+		  <p-avatar *ngIf="user.name === ''" label="{{user.phone | slice:0:1}}" size="large">
+		</p-avatar>
 		  <div class="meta">
 			<p class="name">{{ user.name }}</p>
 			<p *ngIf="user?.name === ''" class="name">{{ user?.phone }}</p>
@@ -76,7 +78,7 @@
 				[severity]="'danger'"
 			    class="unread-badge mr-2">
 			</p-badge>
-			<p-badge *ngIf="user.id === activeUser.id" 
+			<p-badge *ngIf="user.id === activeUser?.id" 
 			    [value]="'active'"
 				[severity]="'warn'"
 			    class="unread-badge">
@@ -89,13 +91,17 @@
 	</div>
   
 	<!-- Chat Section -->
-	<div class="content">
+	<div *ngIf="activeUser?.phone" class="content">
 	  <!-- Contact Profile -->
 	  <div class="contact-profile">
 		<!--img [src]="activeUser?.img" alt="User Image" class="user-img" /-->
-		<p-avatar
-			  label="{{activeUser.name | slice:0:1}}" size="large" 
-		      styleClass="mr-2 ml-2">
+		<p-avatar *ngIf="activeUser?.name"
+		    label="{{activeUser.name | slice:0:1}}" size="large" 
+		    styleClass="mr-2 ml-2">
+		</p-avatar>
+		<p-avatar *ngIf="activeUser?.name === ''"
+			label="{{activeUser.phone | slice:0:1}}" size="large" 
+		    styleClass="mr-2 ml-2">
 		</p-avatar>
 		<div class="user-info">
 		  <p *ngIf="activeUser?.name" class="user-name">{{ activeUser?.name }}</p>
@@ -103,7 +109,7 @@
 		  <i class="pi pi-whatsapp whatsapp-icon"></i>
 		</div>
 		
-		<p-dropdown
+		<p-select
 		  *ngIf="activeUser.status === 'org_new'"
 		  class="mr-2"
 		  [options]="platform"
@@ -112,7 +118,7 @@
 		  placeholder="Select platform"
 		  (onChange)="onPlatformSelected()"
 		>
-		</p-dropdown>
+		</p-select>
 		<p-button [disabled]="this.selected_platform === undefined" *ngIf="activeUser.status === 'org_new'" label="Open" icon="pi pi-lock-open" class="mr-2" (click)="newConversation()"></p-button>
 
 		<p-button *ngIf="activeUser.status !== 'org_new' && activeUser.status !== 'closed'" label="History" icon="pi pi-sync" class="mr-2" (click)="loadHistoricalConversation()"></p-button>
@@ -141,10 +147,15 @@
 
 
 			<p-avatar
-			  *ngIf="msg.type === 'customer'"
+			  *ngIf="msg.type === 'customer' && activeUser?.name"
 			  label="{{activeUser.name | slice:0:1}}" size="large" 
 		      styleClass="mr-2 ml-2">
 		    </p-avatar>
+			
+		<p-avatar *ngIf="msg.type === 'customer' && activeUser?.name === ''"
+			label="{{activeUser.phone | slice:0:1}}" size="large" 
+		    styleClass="mr-2 ml-2">
+		</p-avatar>
 			<p-avatar
 			  *ngIf="msg.type !== 'customer' && msg.type !== 'start_tag' && msg.type !== 'end_tag'"
 			  label="{{profile.name | slice:0:1}}"
@@ -157,6 +168,21 @@
 				<p>{{ msg?.message_body || '' }}
 				    <span *ngIf="msg.sent_time" class="timestamp">{{ msg.sent_time | date:'shortTime' }}</span>
 				    <span *ngIf="msg.received_time" class="timestamp">{{ msg.received_time | date:'shortTime' }}</span>
+
+					<!-- Status Icons -->
+					<span class="status-icon">
+						<i *ngIf="msg.status === 'sent_to_server'" class="pi pi-check"></i>
+						<!-- Double Tick -->
+						<ng-container *ngIf="msg.status === 'sent' || msg.status === 'delivered' || msg.status === 'read'">
+							<i class="pi pi-check double-tick first-tick" [ngClass]="{'read': msg.status === 'read' || msg.status === 'sent'}"></i>
+							<i class="pi pi-check double-tick second-tick" [ngClass]="{'read': msg.status === 'read' || msg.status === 'sent'}"></i>
+						</ng-container>
+						
+						<span class="message-status" *ngIf="msg.status === 'failed'" [pTooltip]="msg.status_details" tooltipPosition="top">
+							<i class="pi pi-times failed-icon"></i>
+						</span>
+
+					</span>
 			    </p>
 			</div>
 		  </li>
@@ -171,11 +197,10 @@
 			#msgInput 
 			placeholder="Write your message..." 
 			(keyup.enter)="addNewMessage(msgInput)" />
-		  <p-button 
+		  <!--p-button 
 			icon="pi pi-paperclip" 
 			class="icon-button" 
-			>
-		  </p-button>
+		  </p-button-->
 		  <p-button 
 			icon="pi pi-send" 
 			class="icon-button" 

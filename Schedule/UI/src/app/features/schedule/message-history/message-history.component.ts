@@ -12,10 +12,17 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ScheduleService } from '../../../shared/services/Schedule/schedule.service';
 import { MessageHistoryModel } from './message-history.model';
+import { ToolbarModule } from 'primeng/toolbar';
+import { ButtonModule } from 'primeng/button';
 @Component({
   selector: 'app-message-history',
   standalone: true,
   imports: [
+    CommonModule,
+    FormsModule,
+
+    ToolbarModule,
+    ButtonModule,
     TableModule,
     TagModule,
     IconFieldModule,
@@ -24,8 +31,7 @@ import { MessageHistoryModel } from './message-history.model';
     MultiSelectModule,
     DropdownModule,
     HttpClientModule,
-    CommonModule,
-    FormsModule
+    
   ],
   templateUrl: './message-history.component.html',
   styleUrl: './message-history.component.scss'
@@ -33,20 +39,24 @@ import { MessageHistoryModel } from './message-history.model';
 export class MessageHistoryComponent implements OnInit {
     @Output() onFailedMessage: EventEmitter<number> = new EventEmitter();
     messages!: MessageHistoryModel[];
-    loading: boolean = true;
+    loading: boolean = false;
     failed_message_count = 0;
+    profile !: any;
 
     constructor(private router: Router, private scheduleService: ScheduleService) {}
   ngOnInit(): void {
 
-    let organization = JSON.parse(localStorage.getItem('me'));
-        if (!organization) {
+    this.profile = JSON.parse(localStorage.getItem('me'));
+        if (!this.profile) {
           this.router.navigate(['login']);
         }
-        organization = organization.organization;
-        console.log("Organizations ", organization);
+        this.loadHistory();
+        
+  }
 
-        this.scheduleService.getHistory(organization).subscribe(
+  loadHistory() {
+    this.loading = true;
+        this.scheduleService.getHistory(this.profile.organization).subscribe(
           (data: MessageHistoryModel[]) => {
             this.messages = data;
             this.messages.forEach((message) => (message.send_date = new Date(<Date>message.send_date)));
@@ -58,9 +68,11 @@ export class MessageHistoryComponent implements OnInit {
             this.loading = false;
           }
         );
+
   }
 
   getFailedMessageCount() {
+    this.failed_message_count = 0;
     this.messages.forEach((message) => {
       if (message.status == 'Error') {
         this.failed_message_count++;

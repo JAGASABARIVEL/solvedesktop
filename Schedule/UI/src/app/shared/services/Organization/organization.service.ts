@@ -22,4 +22,12 @@ private organizationUrl: OrganizationUrl;
     return this.http.get(`${this.organizationUrl.base}/${id}`);
   }
 
+  fetch_name(id:any): Observable<any> {
+    return this.http.get(`${this.organizationUrl.name}/${id}`);
+  }
+
+  fetch_robo_detail(id:any): Observable<any> {
+    return this.http.get(`${this.organizationUrl.base}/${id}/robo`)
+  }
+
 }

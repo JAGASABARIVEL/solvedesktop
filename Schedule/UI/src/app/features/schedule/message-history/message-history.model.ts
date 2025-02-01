@@ -3,5 +3,6 @@ export interface MessageHistoryModel {
     schedule_name: string,
     recipient: string,
     send_date: Date,
-    status: string
+    status: string,
+    status_details: string
 }

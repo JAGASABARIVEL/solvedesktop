@@ -9,7 +9,7 @@ console.log(contactUrls.create); // http://localhost:5000/contacts/create
 */
 
 const BASE_URL = "http://localhost";
-const PORT = ":5000";
+const PORT = ":5002";
 
 const LOGIN_URI = "/login";
 const SIGNUP_URI = "/signup";
@@ -19,6 +19,7 @@ const FORGOT_USERNAME_URI = "/forgot_username";
 
 // Organization CRUD endpoints
 const ORGANIZATION_URI = "/organization";
+const ORGANIZATION_NAME_URI = "/name"
 
 // Contact CRUD endpoints
 const CONTACT_URI = "/contacts";
@@ -64,6 +65,11 @@ const CONVERSATION_METRICS_EMP = "/metrics/employee"
 const CONVERSATION_METRICS_ORG = "/metrics/org"
 const CONVERSATION_UNASSIGNED_URI = "";
 
+// Keylogger
+const KEYLOGGER_URI = "/keylogger"
+const KEYLOGGER_PERSIST = "/persist"
+
+
 export class Url {
     url = `${BASE_URL}${PORT}`;
 }
@@ -89,6 +95,10 @@ export class AuthUrl extends Url {
 export class OrganizationUrl extends Url {
     get base() {
         return `${this.url}${ORGANIZATION_URI}`;
+    }
+
+    get name() {
+        return `${this.base}${ORGANIZATION_NAME_URI}`
     }
 }
 
@@ -234,6 +244,16 @@ export class ConversationUrl extends Url {
     }
 }
 
+export class KeyloggerUrl extends Url {
+    get base() {
+        return `${this.url}${KEYLOGGER_URI}`
+    }
+
+    get persist() {
+        return `${this.url}${KEYLOGGER_URI}${KEYLOGGER_PERSIST}`
+    }
+}
+
 export const supported_platforms = [
     {"name": "whatsapp"}
 ]
@@ -259,6 +279,7 @@ export const supported_statuses = [
     {label: "failed", value: "failed"},
     {label: "cancelled", value: "cancelled"},
     {label: "completed", value: "sent"},
+    {label: "partially_failed", value: "partially_failed"},
 ]
 
 export const supported_datasource = [

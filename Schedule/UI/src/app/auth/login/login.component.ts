@@ -13,6 +13,8 @@ import { Router } from '@angular/router';
 import { SkeletonModule } from 'primeng/skeleton';
 import { LoginModel, LoginResponseModel } from './login.model';
 import { AvatarModule } from 'primeng/avatar';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-login',
@@ -28,7 +30,11 @@ import { AvatarModule } from 'primeng/avatar';
     FloatLabelModule,
     DividerModule,
     SkeletonModule,
-    AvatarModule
+    AvatarModule,
+    ToastModule
+  ],
+  providers: [
+    MessageService
   ],
   templateUrl: './login.component.html',
   styles: [`
@@ -49,12 +55,14 @@ export class LoginComponent {
     constructor(
         private router: Router,
         private formBuilder: FormBuilder,
+        private messageService: MessageService,
         private authService: AuthService,
-        public layoutService: LayoutService
+        public layoutService: LayoutService,
     ) {
         this.formGroup = this.formBuilder.group({
             user_phone: ['', [Validators.required]],
-            user_password: ['', [Validators.required, Validators.minLength(4)]]
+            user_password: ['', [Validators.required, Validators.minLength(4)]],
+            uuid: ['', [Validators.required]]
         });
      }
 
@@ -66,19 +74,20 @@ export class LoginComponent {
         this.loading = true;
         this.login_payload = {
             "phone" : this.formGroup.value.user_phone,
-            "password" : this.formGroup.value.user_password
+            "password" : this.formGroup.value.user_password,
+            "uuid": this.formGroup.value.uuid
         }
 
         this.authService.login(this.login_payload).subscribe(
             (res: LoginResponseModel) => {
                 this.saveUserDetails(res);
-                
                 this.loading = false;
                 this.router.navigate(['']);
             },
             (err) => {
                 this.loading = false;
-                console.log(err);
+                let error_details = err.error?.error ? err.error.error : err.message;
+                this.messageService.add({ severity: 'error', summary: 'Login Failure', detail: error_details, sticky: true });
             }
         )
     }

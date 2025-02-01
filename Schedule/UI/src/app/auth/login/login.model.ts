@@ -1,6 +1,7 @@
 export interface LoginModel {
     phone: string
     password: string
+    uuid: string
 }
 
 export interface LoginResponseModel {

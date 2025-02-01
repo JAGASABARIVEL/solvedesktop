@@ -7,7 +7,19 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class StatusPipe implements PipeTransform {
 
   transform(value: string): string {
-    return value === "sent" ? "Completed" : value;
+    switch(value) {
+      case "scheduled":
+        return "Scheduled"
+      case "sent":
+        return "Completed"
+      case "failed":
+        return "Error"
+      case "in-progress":
+        return "Stuck IO"
+      case "partially_failed":
+        return "Partial Errors"
+      default:
+        return value
+    }
   }
-
 }

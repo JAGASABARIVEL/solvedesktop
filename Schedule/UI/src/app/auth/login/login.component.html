@@ -1,5 +1,5 @@
 
-
+<p-toast/>
 <div class="grid">
 
     <div style="position: fixed; top: 35%; left: 10%;" class="col" >
@@ -34,6 +34,12 @@
                                 <p-password id="password" [toggleMask]="true" inputStyleClass="w-full p-3 md:w-30rem" formControlName="user_password"></p-password>
                                 <label for="phone" *ngIf="formGroup.get('user_password')?.invalid && !formGroup.get('user_password')?.touched">Password</label>
                                 <label for="phone" *ngIf="formGroup.get('user_password')?.invalid && formGroup.get('user_password')?.touched" style="color: red;">Minimum length of the password is 8</label>
+                            </p-floatLabel>
+
+                            <p-floatLabel class="block mb-5">
+                                <p-password id="uuid_id" [toggleMask]="true" inputStyleClass="w-full p-3 md:w-30rem" formControlName="uuid"></p-password>
+                                <label for="uuid_id" *ngIf="formGroup.get('uuid')?.invalid && !formGroup.get('uuid')?.touched">UUID</label>
+                                <label for="uuid_id" *ngIf="formGroup.get('uuid')?.invalid && formGroup.get('uuid')?.touched" style="color: red;">UUID can not be empty</label>
                             </p-floatLabel>
         
                             <div class="flex align-items-center justify-content-between mb-5 gap-5">

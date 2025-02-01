@@ -485,6 +485,7 @@ formatSize(bytes: number): string {
           uploaded_excel: this.files[0],
           organization_id: this.profile.organization,
           platform: selected_pltfrm?.id,
+          frequency: this.selected_frequency,
           user_id: this.profile.id,
           recipient_type: this.selected_contact_type?.value,
           recipient_id: contact?.id,

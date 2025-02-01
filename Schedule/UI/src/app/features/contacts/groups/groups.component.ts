@@ -85,7 +85,6 @@ export class GroupsComponent {
       this.router.navigate(['login']);
     }
 
-    this.loadUserContacts();
     this.loadContactGroups();
     this.loading = false;
   }
@@ -104,15 +103,18 @@ export class GroupsComponent {
 
   individual_contacts !: any;
   loadUserContacts() {
+    this.loading = true;
     this.contactService.getContacts({"organization_id": this.profile.organization}).subscribe(
       (data) => {
         this.individual_contacts = data;
         this.individual_contacts.forEach((individual_contact)=> {
           individual_contact.name = individual_contact.name === ''? individual_contact.phone : individual_contact.name;
-        })
+        });
+        this.loading = false;
       },
       (err) => {
         console.log("Compose Message | Error getting contacts ", err);
+        this.loading = false;
       }
      )
   }
@@ -126,6 +128,7 @@ export class GroupsComponent {
         console.log("Contact Groups ", data);
         this.totalGroups.emit(this.products.length);
         this.messageService.add({ severity: 'success', summary: 'Successful', detail: 'Groups Loaded', life: 3000 });
+        this.loadUserContacts();
       },
       (err) => {
         this.loading = false;

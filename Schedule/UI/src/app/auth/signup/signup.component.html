@@ -1,5 +1,5 @@
 
-
+<p-toast/>
 <div class="grid">
 
     <div style="position: absolute; top: 35%; left: 10%;" class="col" >
@@ -36,6 +36,11 @@
                             <p-floatLabel>
                                 <input id="email" type="text" pInputText controllername="user_email" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_email">
                                 <label for="email">Email</label>
+                            </p-floatLabel>
+
+                            <p-floatLabel>
+                                <input id="uuid_id" type="text" pInputText controllername="uuid" class="block w-full md:w-30rem mb-5 p-3" formControlName="uuid">
+                                <label for="uuid_id">Uuid</label>
                             </p-floatLabel>
                             
                             <div class="">
@@ -100,6 +105,11 @@
                         <p-floatLabel *ngIf="role_selected=='owner'">
                             <input *ngIf="role_selected=='owner'" id="platform_key" type="text" pInputText controllername="user_platform_key" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_platform_key">
                             <label for="platform_key">Platform Key</label>
+                        </p-floatLabel>
+
+                        <p-floatLabel *ngIf="role_selected=='owner'">
+                            <input *ngIf="role_selected=='owner'" id="robo_key" type="text" pInputText controllername="robo_name_key" class="block w-full md:w-30rem mb-5 p-3" formControlName="robo_name_key">
+                            <label for="robo_key">Robo Name</label>
                         </p-floatLabel>
         
                         <div class="mb-5">

@@ -14,6 +14,7 @@ import { PlatformModel } from '../../shared/services/Platform/platform.model';
 import { ToastModule } from 'primeng/toast';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { OrganizationService } from '../../shared/services/Organization/organization.service';
 
 
 
@@ -48,6 +49,7 @@ export class UserProfileComponent implements OnInit {
   formGroup!: FormGroup;
 
   user: LoginResponseModel = undefined;
+  org_name!: string;
   platforms!: PlatformModel[];
   new_platform!: PlatformModel;
 
@@ -55,7 +57,8 @@ export class UserProfileComponent implements OnInit {
     private router: Router,
     private platforService: PlatformService,
     private messageService: MessageService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private organizationService: OrganizationService
   ) {
         this.formGroup = this.formBuilder.group({
           selected_platform_ctrl: ['', [Validators.required]],
@@ -78,6 +81,14 @@ export class UserProfileComponent implements OnInit {
       owner_id: this.user.id,
       status: 'active'
     }
+
+    this.organizationService.fetch_name(this.user.organization).subscribe((data) => {
+      this.org_name = data.name;
+    },
+    (err) => {
+      console.log("List conversation | Error getting users ", err);
+    }
+    );
   }
 
   loadRegisteredPlatforms() {

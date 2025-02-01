@@ -161,6 +161,7 @@ export class CrudSchedulesComponent implements OnInit, OnDestroy {
     switch (status) {
         case 'Daily':
         case 'failed':
+        case 'partially_failed':
             return 'danger';
         case 'Weekly':
         case 'sent':

@@ -1,4 +1,19 @@
+
 <div class="card">
+    <p-toolbar styleClass="mb-4 gap-2">
+        <ng-template pTemplate="left">
+            
+        </ng-template>
+        <ng-template pTemplate="right">
+            <p-button
+                severity="success"
+                icon="pi pi-replay"
+                class="mr-2"
+                (onClick)="loadHistory()"
+            />
+        </ng-template>
+    </p-toolbar>
+
     <p-table
         #dt2
         [value]="messages"
@@ -13,6 +28,7 @@
         'status'
         ]"
         [tableStyle]="{ 'min-width': '75rem' }"
+        [loading]="loading"
     >
     <ng-template pTemplate="header">
         <tr>
@@ -20,6 +36,7 @@
             <th>Recipient</th>
             <th>Last Sent Date</th>
             <th>Last Sent Status</th>
+            <th>Status Details</th>
         </tr>
         <tr>
             <th>
@@ -50,6 +67,13 @@
                     placeholder="Search by status" 
                     ariaLabel="Filter Status" />
             </th>
+            <th>
+                <p-columnFilter 
+                    type="text"
+                    field="status_details"
+                    placeholder="Search by status details" 
+                    ariaLabel="Filter Status Details" />
+            </th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-message>
@@ -65,6 +89,9 @@
             </td>
             <td>
                 {{ message.status }}
+            </td>
+            <td>
+                {{ message.status_details }}
             </td>
         </tr>
     </ng-template>

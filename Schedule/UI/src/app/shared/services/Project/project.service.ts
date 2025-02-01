@@ -5,7 +5,7 @@ import { HttpClient } from '@angular/common/http';
     providedIn: 'root'
 })
 export class ProjectService {
-    private baseUrl = 'http://localhost:5000'; // Replace with actual API base URL
+    private baseUrl = 'http://localhost:5002'; // Replace with actual API base URL
 
     constructor(private http: HttpClient) {}
 

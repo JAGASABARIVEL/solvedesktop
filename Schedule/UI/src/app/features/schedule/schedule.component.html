@@ -36,7 +36,7 @@
                     <p-badge *ngIf="failedMessageCounts > 0" [value]="failedMessageCounts" severity="danger" />
                     <p-badge *ngIf="failedMessageCounts == 0" [value]="failedMessageCounts" />
                 </div>
-            </ng-template>"
+            </ng-template>
             <app-message-history (onFailedMessage)="onFailedMessageHandler($event)"></app-message-history>
         </p-tabPanel>
     </p-tabView>

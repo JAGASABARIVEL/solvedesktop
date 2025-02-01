@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { AppLayoutComponent } from './layout/app.layout.component';
 import { LoginComponent } from './auth/login/login.component';
 import { SignupComponent } from './auth/signup/signup.component';
+import { NotfoundComponent } from './auth/pages/notfound/notfound.component';
+import { ErrorComponent } from './auth/pages/error/error.component';
 
 export const routes: Routes = [
     {
@@ -16,4 +18,7 @@ export const routes: Routes = [
     },
     { path: 'login', component: LoginComponent },
     { path: 'signup', component: SignupComponent },
+    { path: 'notfound', component: NotfoundComponent },
+    { path: 'error', component: ErrorComponent },
+    { path: '**', redirectTo: '/notfound' }
 ];

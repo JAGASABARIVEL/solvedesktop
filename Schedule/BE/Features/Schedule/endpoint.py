@@ -22,6 +22,17 @@ from database_schema import *
 def init_endpoint(app_context, app, Session):
     with app_context:
         # Endpoints
+
+        @app.route('/organization/<org_id>/robo', methods=['GET'])
+        def get_robo_detail(org_id):
+            with Session() as session:
+                try:
+                    robo_name = session.query(Organization).filter_by(id=org_id).first().robo_name
+                    robo_user_id = session.query(User).filter_by(name=robo_name, organization_id=org_id).first().id
+                    return jsonify({'id': robo_user_id, 'name': robo_name}), 200
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 400
+
         @app.route('/organization', methods=['POST'])
         def create_organization():
             with Session() as session:
@@ -36,6 +47,16 @@ def init_endpoint(app_context, app, Session):
                     return jsonify({"message": "Organization created successfully!"}), 201
                 except Exception as e:
                     return jsonify({"error": str(e)}), 400
+        
+        @app.route('/organization/name/<int:id>', methods=['GET'])
+        @cross_origin()
+        def get_organization_name(id):
+            organization = Organization.query.get(id)
+            if organization:
+                return jsonify({
+                    "name": organization.name,
+                })
+            return jsonify({"error": "Organization not found"}), 404
 
         @app.route('/organization/<int:id>', methods=['GET'])
         @cross_origin()
@@ -205,13 +226,18 @@ def init_endpoint(app_context, app, Session):
                         return jsonify({"error": "User already exists"}), 409
                     if data['user_type'] != "owner" and not session.query(Organization).filter_by(name=data['organization']).first():
                         return jsonify({"error": "Please contact your management team to register the Organization"}), 409
+                    if user:
+                        _uuid = session.query(Uuid).filter_by(organization_id=user.organization_id, uuid=data['uuid']).first()
+                        if _uuid:
+                            return jsonify({"error": "Systems already registered in the organization"})
                     with session.begin_nested():
                         user = User(
                             name=data['name'],
                             phone=data['phone'],
                             email=data['email'],
                             user_type=data['user_type'],
-                            password=data['password']  # Hash in production
+                            password=data['password'],  # Hash in production
+                            uuid=data['uuid']
                         )
                         session.add(user)
                         session.flush()
@@ -220,12 +246,25 @@ def init_endpoint(app_context, app, Session):
                             if not organization:
                                 organization = Organization(
                                     name=data['organization'],
-                                    owner_id=user.id
+                                    owner_id=user.id,
+                                    robo_name=data['robo_name']
                                 )
                                 session.add(organization)
                                 session.flush()
                             user.organization_id = organization.id
                             session.add(user)
+
+                            # Create robo user
+                            robo_user = User(
+                                name=data['robo_name'],
+                                phone='000000000',
+                                email='robo@solvedesktop.com',
+                                user_type='employee',
+                                password='10011001',  # Hash in production
+                                uuid='012210'
+                            )
+                            session.add(robo_user)
+
                             # Create OwnerAccount
                             owner_account = session.query(OwnerAccount).filter_by(organization_id=organization.id).first()
                             if not owner_account:
@@ -243,9 +282,15 @@ def init_endpoint(app_context, app, Session):
                                     login_credentials=data['platform_login_credentials']
                                 )
                                 session.add(platform)
+                            session.flush()
                         elif data['user_type'] == 'employee':
                             user.organization_id = organization.id
                             session.add(user)
+                        _uuid = Uuid(
+                            organization_id=user.organization_id,
+                            uuid=data['uuid']
+                        )
+                        session.add(_uuid)
                         session.commit()
                     return jsonify({"message": "User signed up successfully!"}), 201
                 except Exception as e:
@@ -257,17 +302,30 @@ def init_endpoint(app_context, app, Session):
         @cross_origin()
         def login():
             data = request.json
-            user = User.query.filter_by(phone=data['phone']).first()
-            if user and user.password == data['password']:  # Verify hash in production
-                return jsonify({
-                    "id": user.id,
-                    "name": user.name,
-                    "email": user.email,
-                    "phone": user.phone,
-                    "role": user.user_type,
-                    "organization": user.organization_id,
-                }), 200
-            return jsonify({"error": "Invalid credentials"}), 401
+            uuid = data.get("uuid")
+            if not uuid:
+                return jsonify({"error": "UUID is required"}), 400
+            with Session() as session:
+                user = session.query(User).filter_by(phone=data['phone']).first()
+                _uuid = session.query(Uuid).filter_by(organization_id=user.organization_id, uuid=uuid).first()
+                if not _uuid:
+                    return jsonify({"error": "No such systems registered in the organization"}), 401
+                if user and user.password == data['password']:  # Verify hash in production
+                    if user.uuid != uuid:
+                        already_assigned_mac_address = User.query.filter_by(uuid=uuid).first()
+                        already_assigned_mac_address.uuid = None
+                        # Update the uuid since the user seems to changed(motherboard replaced) the system
+                        user.uuid = uuid
+                        session.commit()
+                    return jsonify({
+                        "id": user.id,
+                        "name": user.name,
+                        "email": user.email,
+                        "phone": user.phone,
+                        "role": user.user_type,
+                        "organization": user.organization_id,
+                    }), 200
+                return jsonify({"error": "Invalid credentials"}), 401
 
         def generate_unique_filename(original_filename):
             # Extract file extension
@@ -290,7 +348,7 @@ def init_endpoint(app_context, app, Session):
         #    return excel_data.to_dict(orient='records')
 
         def process_excel_from_upload(file):
-            print(os.path.exists(file)) 
+            print(file, "exists ", os.path.exists(file)) 
             sheet = pyexcel.get_sheet(file_name=file)
             data = []
             headers = sheet.row[0]  # First row as headers
@@ -299,6 +357,7 @@ def init_endpoint(app_context, app, Session):
             return data
 
         def dump_for_excel_datasource(datasource):
+            print("datasource ", datasource)
             excel_filenames = []
             # Handle Excel Datasource
             for key, source in datasource.items():
@@ -323,6 +382,7 @@ def init_endpoint(app_context, app, Session):
             recipient_type = request.form.get('recipient_type')
             recipient_id = request.form.get('recipient_id')
             message_body = request.form.get('message_body')
+            frequency = request.form.get('frequency')
             scheduled_time = request.form.get('scheduled_time')
             datasource = json.loads(request.form.get('datasource', {}))  # This will be a JSON string
 
@@ -358,6 +418,7 @@ def init_endpoint(app_context, app, Session):
                         recipient_id=recipient_id,
                         message_body=message_body,
                         platform=platform.id,
+                        frequency=frequency,
                         organization_id=organization_id,
                         datasource=datasource,  # Store the entire datasource configuration
                         excel_filename=",".join(excel_filenames),  # Store filenames as comma-separated string
@@ -367,6 +428,7 @@ def init_endpoint(app_context, app, Session):
                     session.commit()
                     return jsonify({"message": "Message scheduled successfully!"}), 201
                 except Exception as e:
+                    app.logger.info(str(traceback.format_exc()))
                     return jsonify({"error": str(e)}), 400
           except Exception as ex:
             app.logger.info(str(traceback.format_exc()))
@@ -971,7 +1033,8 @@ def init_endpoint(app_context, app, Session):
                                 "schedule_name": schedule_name,
                                 "recipient": user_name,
                                 "send_date": send_date,
-                                "status": "Ok" if message.log_message == "success" else "Error",
+                                "status": message.status,
+                                "status_details": message.log_message
                             })
 
                     return jsonify(history), 200
@@ -1009,8 +1072,8 @@ def init_endpoint(app_context, app, Session):
                                 token=token
                             )
                             response = text_message.send_message(recipient_phone_number, message_body)
-                            print(response.status_code)
-                            return "Message sent successfully via WhatsApp"
+                            response = response.json()
+                            return response
                     else:
                         raise ValueError("Unsupported platform")
                 except WebHookException as webhook_error:
@@ -1069,6 +1132,7 @@ def init_endpoint(app_context, app, Session):
                     #msg = session.query(ScheduledMessage).get(msg_id)
                     if not msg:
                         raise ValueError("Scheduled message not found")
+                    org_id = msg.organization_id
                     if msg.recipient_type == 'group':
                         group_members = session.query(GroupMember).filter_by(group_id=msg.recipient_id).all()
                         contact = [session.query(Contact.phone).filter_by(id=member.contact_id).first()[0] for member in group_members]
@@ -1079,39 +1143,84 @@ def init_endpoint(app_context, app, Session):
                         substitutions = fetch_placeholders_for_recipients(
                             contact, msg.message_body, msg.datasource
                         )
-                        max_failures_percentage = len(group_members)
+                        max_failures = len(group_members)
                         actual_failures = 0
+                        actual_failure_reason = {}
                         for member in group_members:
+                            user_message = None
                             try:
                                 phone_number = session.query(Contact.phone).filter_by(id=member.contact_id).first()[0]
                                 substituted_message = substitutions.get(phone_number, msg.message_body)
+                                robo_name = session.query(Organization).filter_by(id=org_id).first().robo_name
+                                robo_user_id = session.query(User).filter_by(name=robo_name, organization_id=org_id).first().id
+                                conversation = Conversation(
+                                    assigned_user_id=robo_user_id,
+                                    organization_id=org_id,
+                                    platform_id=msg.platform,
+                                    contact_id=member.contact_id,
+                                    open_by=robo_name,
+                                    closed_by=robo_user_id,
+                                    status='closed'
+                                )
+                                session.add(conversation)
+                                session.flush()
+                                user_message = UserMessage(
+                                    conversation_id=conversation.id,
+                                    organization_id=conversation.organization_id,
+                                    platform_id=conversation.platform_id,
+                                    user_id=robo_user_id,
+                                    message_body=substituted_message,
+                                    status="failed",
+                                    messageid=None,
+                                )
+                                session.add(user_message)
+                                session.commit()
                                 response = send_message(
                                     msg.platform,
                                     member.contact_id,
                                     substituted_message,
                                 )
+                                msg_id = response['messages'][0].get('id')
+                                user_message.messageid = msg_id
+                                user_message.status = "sent_to_server"
                                 #msg = session.query(ScheduledMessage).get(msg_id)
                                 msg.sent_time = datetime.utcnow()
+                                platform_log_msg = json.dumps({phone_number: {"messageid": msg_id, "Error": None}})
                                 log = PlatformLog(
                                     scheduled_message_id=msg.id,
-                                    log_message='success',
+                                    log_message=platform_log_msg,
                                     recipient_id=member.contact_id,
-                                    organization_id=msg.organization_id
+                                    organization_id=org_id,
+                                    messageid=msg_id,
+                                    status="Ok"
                                 )
                                 session.add(log)
                                 session.commit()
                                 
-                            except Exception as e:
+                            except Exception as group_member_exc:
+                                exc_message=str(traceback.format_exc())
+                                platform_log_msg = json.dumps({phone_number: {"messageid": None, "Error": exc_message}})
                                 log = PlatformLog(
                                     scheduled_message_id=msg.id,
-                                    log_message=str(traceback.format_exc()),
+                                    log_message=platform_log_msg,
                                     recipient_id=member.contact_id,
-                                    organization_id=msg.organization_id
-
+                                    organization_id=org_id,
+                                    status="Error"
                                 )
                                 session.add(log)
+                                user_message.status_details = str(group_member_exc)
                                 session.commit()
+                                actual_failure_reason.update({phone_number: exc_message})
                                 actual_failures += 1
+                        if actual_failures == 0:
+                            msg.status = "sent"
+                        elif actual_failures < max_failures:
+                            msg.status = "partially_failed"
+                            msg.msg_status = json.dumps(actual_failure_reason)
+                        else:
+                            msg.status = "failed"
+                            msg.msg_status = json.dumps(actual_failure_reason)
+                        session.commit()
 
                     elif msg.recipient_type == 'user':
                         contact = session.query(Contact.phone).filter_by(id=msg.recipient_id).first()[0] # [0] since the query result would be tuple
@@ -1121,24 +1230,78 @@ def init_endpoint(app_context, app, Session):
                             [contact], msg.message_body, msg.datasource
                         )
                         substituted_message = substitutions.get(contact, None)#msg.message_body)
+                        robo_name = session.query(Organization).filter_by(id=org_id).first().robo_name
+                        robo_user_id = session.query(User).filter_by(name=robo_name, organization_id=org_id).first().id
+                        conversation = Conversation(
+                            assigned_user_id=robo_user_id,
+                            organization_id=org_id,
+                            platform_id=msg.platform,
+                            contact_id=msg.recipient_id,
+                            open_by=robo_name,
+                            closed_by=robo_user_id,
+                            status='closed'
+                        )
+                        session.add(conversation)
+                        session.flush()
+                        user_message = UserMessage(
+                            conversation_id=conversation.id,
+                            organization_id=conversation.organization_id,
+                            platform_id=conversation.platform_id,
+                            user_id=robo_user_id,
+                            message_body=substituted_message,
+                            status="failed",
+                            messageid=None
+                        )
+                        session.add(user_message)
+                        session.commit()
                         if not substituted_message:
                             #msg = session.query(ScheduledMessage).get(msg_id)
                             msg.status = 'failed'
+                            msg.msg_status = 'failed'
                             session.flush()
-                            log = PlatformLog(scheduled_message_id=msg.id, log_message='Missing format for the contact', recipient_id=msg.recipient_id, organization_id=msg.organization_id)
+                            exc_message = "Missing format for the contact"
+                            platform_log_msg = json.dumps({contact: {"messageid": None, "Error": exc_message}})
+                            log = PlatformLog(
+                                scheduled_message_id=msg.id,
+                                log_message=platform_log_msg,
+                                recipient_id=msg.recipient_id,
+                                organization_id=org_id,
+                                status="Error"
+                            )
                             session.add(log)
+                            user_message.status_details = exc_message
                             session.commit()
                             return
-                        response = send_message(
-                            msg.platform,
-                            msg.recipient_id,
-                            substituted_message,
-                        )
+                        response = None
+                        try:
+                            response = send_message(
+                                msg.platform,
+                                msg.recipient_id,
+                                substituted_message,
+                            )
+                        except Exception as user_msg_e:
+                            user_message.status_details = str(user_msg_e)
+                            session.commit()
+                            raise Exception from user_message
+
                         #msg = session.query(ScheduledMessage).get(msg_id)
+                        msg_id = response['messages'][0].get('id')
+                        user_message.messageid = msg_id
+                        user_message.status = "sent_to_server"
+                        msg.messageid = response['messages'][0].get('id')
                         msg.status = 'sent'
+                        msg.msg_status = 'sent_to_server'
                         msg.sent_time = datetime.utcnow()
                         session.flush()
-                        log = PlatformLog(scheduled_message_id=msg.id, log_message='success', recipient_id=msg.recipient_id, organization_id=msg.organization_id)
+                        platform_log_msg = json.dumps({contact: {"messageid": msg_id, "Error": None}})
+                        log = PlatformLog(
+                            scheduled_message_id=msg.id,
+                            log_message=platform_log_msg,
+                            recipient_id=msg.recipient_id,
+                            organization_id=org_id,
+                            status="Ok",
+                            messageid=msg_id
+                        )
                         session.add(log)
                         session.commit()
                     # Reschedule if frequency is set
@@ -1172,8 +1335,17 @@ def init_endpoint(app_context, app, Session):
                     #msg = session.query(ScheduledMessage).get(msg_id)
                     if msg:
                         msg.status = 'failed'
+                        msg.msg_status = 'failed'
                         session.commit()
-                    log = PlatformLog(scheduled_message_id=msg.id, log_message=str(traceback.format_exc()), recipient_id=msg.recipient_id, organization_id=msg.organization_id)
+                    exc_message = str(traceback.format_exc())
+                    platform_log_msg = json.dumps({contact: {"messageid": None, "Error": exc_message}})
+                    log = PlatformLog(
+                        scheduled_message_id=msg.id,
+                        log_message=platform_log_msg,
+                        recipient_id=msg.recipient_id,
+                        organization_id=org_id,
+                        status="Error"
+                    )
                     session.add(log)
                     session.commit()
 
@@ -1197,10 +1369,43 @@ def init_endpoint(app_context, app, Session):
                             session.commit()
                             #executor.submit(process_message, msg, session)
                             process_message(msg, session)
+                    print("session exited")
                 except Exception as e:
                     app.logger.error(f"An error occurred while sending scheduled messages: {e}")
                     time.sleep(10)  # Sleep to avoid constant failure retries
 
+        def close_old_conversations():
+            # Get 24 hours ago from current time
+            time_threshold = datetime.utcnow() - timedelta(hours=24)
+            while True:
+                try:
+                    with Session() as session:
+                        # Update all conversations that are older than 24 hours and are still open
+                        conversations_to_be_closed = session.query(Conversation).filter(
+                            Conversation.created_at < time_threshold,
+                            Conversation.status != "closed"
+                        ).all()
+                        if not conversations_to_be_closed:
+                            app.logger.info("No conversations surpassed 24 hour window")
+                            time.sleep(300) # To avoid unnecessary holding of CPU cycles.
+                            continue
+                        for conversation_to_be_closed in conversations_to_be_closed:
+                            org_id = conversation_to_be_closed.organization_id
+                            robo_name = session.query(Organization).filter_by(id=org_id).first().robo_name
+                            robo_id = session.query(User).filter_by(name=robo_name, organization_id=org_id).first().id
+                            conversation_to_be_closed.status = "closed"
+                            conversation_to_be_closed.closed_reason = "conversation surpassed 24 hours window"
+                            conversation_to_be_closed.closed_by = robo_id
+                            session.commit()
+                except Exception as e:
+                    app.logger.error(f"An error occurred while cleaning up conversation: {e}")
+                    time.sleep(60)  # Sleep to avoid constant failure retries
+                
+        
         # Start the worker thread
         main_thread_2 = Thread(target=send_scheduled_messages, daemon=True)
         main_thread_2.start()
+
+        main_thread_3 = Thread(target=close_old_conversations, daemon=True)
+        main_thread_3.start()
+

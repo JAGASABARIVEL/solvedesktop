@@ -17,6 +17,8 @@ import { EmployeeSignup, OwnerSignup } from './signup.models';
 import { AvatarModule } from 'primeng/avatar';
 import { OrganizationService } from '../../shared/services/Organization/organization.service';
 import { supported_platforms } from '../../shared/services/constants';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-signup',
@@ -34,6 +36,10 @@ import { supported_platforms } from '../../shared/services/constants';
     DropdownModule,
     SkeletonModule,
     AvatarModule,
+    ToastModule
+  ],
+  providers: [
+    MessageService
   ],
   templateUrl: './signup.component.html',
   styleUrl: './signup.component.css'
@@ -54,6 +60,7 @@ export class SignupComponent implements OnInit {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
+    private messageService: MessageService,
     private authService: AuthService,
     public layoutService: LayoutService,
     private organizationService: OrganizationService
@@ -62,10 +69,12 @@ export class SignupComponent implements OnInit {
         user_name: ['', [Validators.required]],
         user_phone: ['', [Validators.required]],
         user_email: ['', [Validators.required, Validators.email]],
+        uuid: ['', [Validators.required]],
         user_role: ['', [Validators.required]],
         user_organization: ['', [Validators.required]],
         user_platform: [''],
         user_platform_key: [''],
+        robo_name_key: [''],
         user_login_id: [''],
         user_password: ['', [Validators.required, Validators.minLength(8)]],
         user_confirm_password: ['', [Validators.required]]
@@ -122,11 +131,13 @@ signupButton() {
         "name": this.formGroup.value.user_name,
         "phone": this.formGroup.value.user_phone,
         "email": this.formGroup.value.user_email,
+        "uuid": this.formGroup.value.uuid,
         "user_type": this.formGroup.value.user_role,
         "organization": this.formGroup.value.user_organization,
         "platform_name": this.formGroup.value.user_platform.name,
         "login_id": this.formGroup.value.user_login_id,
         "platform_login_credentials": this.formGroup.value.user_platform_key,
+        "robo_name": this.formGroup.value.robo_name_key,
         "password": this.formGroup.value.user_password
       }
       payload = this.owner_signup_payload;
@@ -136,6 +147,7 @@ signupButton() {
         "name": this.formGroup.value.user_name,
         "phone": this.formGroup.value.user_phone,
         "email": this.formGroup.value.user_email,
+        "uuid": this.formGroup.value.uuid,
         "user_type": this.formGroup.value.user_role,
         "organization": this.formGroup.value.user_organization?.name,
         "password": this.formGroup.value.user_password
@@ -149,7 +161,8 @@ signupButton() {
       },
       (err) => {
         this.loading = false;
-        console.log(err);
+        let error_details = err.error?.error ? err.error.error : err.message;
+        this.messageService.add({ severity: 'error', summary: 'Registration Failure', detail: error_details, sticky: true });
       }
     );
     console.log("Typed signup form is ", this.formGroup.value);
