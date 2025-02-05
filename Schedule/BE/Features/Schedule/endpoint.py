@@ -257,6 +257,7 @@ def init_endpoint(app_context, app, Session):
                             # Create robo user
                             robo_user = User(
                                 name=data['robo_name'],
+                                organization_id= organization.id,
                                 phone='000000000',
                                 email='robo@solvedesktop.com',
                                 user_type='employee',

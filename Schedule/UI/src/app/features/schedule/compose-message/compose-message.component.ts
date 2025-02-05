@@ -27,6 +27,7 @@ import { ComposeMessageModel, DataSourceModel } from './compose.model';
 import { ScheduleEventService } from '../../../shared/services/Events/schedule-events.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DatePickerModule } from 'primeng/datepicker';
+import { SelectModule } from 'primeng/select';
 
 
 
@@ -36,6 +37,8 @@ import { DatePickerModule } from 'primeng/datepicker';
   imports: [
     CommonModule,
     FormsModule,
+
+    SelectModule,
     DropdownModule,
     MultiSelectModule,
     InputGroupModule,
@@ -231,12 +234,13 @@ export class ComposeMessageComponent implements OnInit {
 
   onContactTypeSelected() {
     this.contacts = [];
-    if (this.selected_contact_type?.name == "User") {
+    console.log("onContactTypeSelected ", this.selected_contact_type);
+    if (this.selected_contact_type?.name === "User") {
       this.contact_list_placeholder = "Recipients";
       this.loadUserContacts();
 
     }
-    else if (this.selected_contact_type?.name == "Group") {
+    else if (this.selected_contact_type?.name === "Group") {
       this.contact_list_placeholder = "Groups";
       this.loadGroups();
     }
@@ -475,8 +479,10 @@ formatSize(bytes: number): string {
         file_upload: "uploaded_excel"
       }
     }
-
     let total_messages = 0;
+    if (this.selected_contact_type?.name === "User") {
+      this.selected_contacts = [this.selected_contacts];
+    }
 
     for (let contact of this.selected_contacts) {
       for (let selected_pltfrm of this.selected_platform) {

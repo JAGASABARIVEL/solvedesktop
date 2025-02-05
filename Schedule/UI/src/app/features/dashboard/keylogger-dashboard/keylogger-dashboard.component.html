@@ -33,7 +33,8 @@
                 <p-chart
                     type="pie"
                     [data]="appUsagePieChartData"
-                    [options]="chartOptions">
+                    [options]="chartOptions"
+                    [plugins]="chartPlugins">
                 </p-chart>
             </div>
 
@@ -45,7 +46,8 @@
                 <p-chart
                     type="bar"
                     [data]="keystrokeBarChartData"
-                    [options]="chartOptions">
+                    [options]="chartOptions"
+                    [plugins]="chartPlugins">
                 </p-chart>
             </div>
 
@@ -59,7 +61,8 @@
                 <p-chart
                   type="doughnut"
                   [data]="idleTimeGaugeChartData"
-                  [options]="gaugeChartOptions">
+                  [options]="gaugeChartOptions"
+                  [plugins]="chartPlugins">
                 </p-chart>
             </div>
         </div>
@@ -69,7 +72,7 @@
                     <h5>Productivity Report</h5>
                 </div>
                 <!-- Table Summary -->
-                <p-table [value]="reportSummary" [paginator]="true" [rows]="5" [responsiveLayout]="'scroll'">
+                <p-table #dt [loading]="loadingReport" [value]="reportSummary" [dataKey]="'name'" [paginator]="true" [rows]="15" [responsiveLayout]="'scroll'" sortField="keystrokes" [sortOrder]="-1" [rowsPerPageOptions]="[15, 30, 45]">
                     <ng-template pTemplate="header">
                       <tr>
                         <th pSortableColumn="name">

@@ -1,6 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { io, Socket } from 'socket.io-client'; // Import socket.io-client
 import { Subject } from 'rxjs'; // Import Subject to create observables for event listening
+import { HOST } from '../../../../environment';
 
 @Injectable({
   providedIn: 'root',
@@ -11,7 +12,7 @@ export class SocketService implements OnDestroy {
 
   constructor() {
     // Connect to the WebSocket server
-    this.socket = io('http://localhost:5001', {
+    this.socket = io(`http://${HOST}:5001`, {
       transports: ['websocket'],
     });
 

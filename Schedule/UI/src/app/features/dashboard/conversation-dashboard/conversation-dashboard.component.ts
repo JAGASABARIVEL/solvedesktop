@@ -14,6 +14,7 @@ import { ConversationService } from '../../../shared/services/Conversation/conve
 import { ScheduleEventService } from '../../../shared/services/Events/schedule-events.service';
 import { OrganizationService } from '../../../shared/services/Organization/organization.service';
 import { FloatLabelModule } from 'primeng/floatlabel';
+import { BadgeModule } from 'primeng/badge';
 
 @Component({
   selector: 'app-conversation-dashboard',
@@ -22,6 +23,8 @@ import { FloatLabelModule } from 'primeng/floatlabel';
     CommonModule,
     RouterModule,
     FormsModule,
+
+    BadgeModule,
     ChartModule,
     DropdownModule,
     AvatarModule,
@@ -269,6 +272,17 @@ export class ConversationDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  countSeverity(value: any) {
+    value = Number(value);
+    if (value < 5) {
+        return 'danger';
+    } else if (value >= 5 && value < 10) {
+        return 'warn';
+    } else {
+        return 'success';
+    }
+}
+  
   org_metrics_data;
   reset_org_metrics_data() {
     this.org_metrics_data = {
@@ -380,7 +394,7 @@ export class ConversationDashboardComponent implements OnInit, OnDestroy {
         'organization_id': this.profile.organization,
         'start_date': globalformattedDates[0],
         'end_date': globalformattedDates[1],
-        'period': this.selectedConversationPerformerPeriod.value
+        'period': this.selectedConversationPerformerPeriod?.value
       }
     ).subscribe(
       (data) => {
