@@ -243,9 +243,42 @@
             </div-->
         </div>
 
-        <div class="col-12">
+        <div *ngIf="employees?.length > 0" class="col-12 xl:col-6">
             <div class="card">
-                <div class="flex justify-content-between align-items-center mb-5">
+                <div class="flex justify-content-between align-items-center">
+                    <h5>Leader Board</h5>
+                </div>
+                <!-- Table Summary -->
+                <p-table [value]="employees" sortField="closed" [sortOrder]="-1" [paginator]="true" [rows]="15" [responsiveLayout]="'scroll'"  [rowsPerPageOptions]="[15, 30, 45]">
+                    <ng-template #header>
+                      <tr>
+                        <th pSortableColumn="name">
+                            Application <p-sortIcon field="name" />
+                        </th>
+                        <th pSortableColumn="active">
+                            Total Owned <p-sortIcon field="active" />
+                        </th>
+                        <th pSortableColumn="closed">
+                            Total Closed <p-sortIcon field="closed" />
+                        </th>
+                      </tr>
+                    </ng-template>
+                    <ng-template #body let-data>
+                      <tr>
+                        <td>{{ data.name }}</td>
+                        <td>{{ data.active }}</td>
+                        <td>
+                            <p-badge [value]="data.closed" [severity]="countSeverity(data.closed)" />
+                        </td>
+                      </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+    </div>
+
+        <div class="col-12 xl:col-6">
+            <div class="card">
+                <div class="justify-content-end mb-5">
                     <h5>Employee Conversation Metrics</h5>
                     <div>
 
@@ -288,6 +321,8 @@
                 ></p-chart-->
             </div>
         </div>
+
+
         
     </div>
 </div>

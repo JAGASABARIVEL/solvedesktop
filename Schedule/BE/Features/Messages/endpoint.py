@@ -36,8 +36,8 @@ def init_endpoint(app_context, app, Session):
         def start_consumer():
             # TODO: Remove the hardcoded credentials of kafka
             kafka_config = read_config()
-            kafka_config["sasl.username"] = "BEYSO2BBJN5YQNPI" #os.getenv("kf_username")
-            kafka_config["sasl.password"] = "yzngow9zRBIQg9nPvxoAzE2LvSv1B7vq036UBtodOFLbL0TZT54ntWuS5om8da37" #os.getenv("kf_password")
+            #kafka_config["sasl.username"] = os.getenv("kf_username")
+            #kafka_config["sasl.password"] = os.getenv("kf_password")
             print("kafka_config ", kafka_config)
             ConsumerService(app, topic=TOPIC, group_id=GRP_ID, config=kafka_config, session=Session).run()
         # Start the consumer in a separate thread

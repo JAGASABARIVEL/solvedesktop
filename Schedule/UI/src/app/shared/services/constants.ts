@@ -8,7 +8,9 @@ const contactUrls = new ContactUrl();
 console.log(contactUrls.create); // http://localhost:5000/contacts/create
 */
 
-const BASE_URL = "http://localhost";
+import { HOST } from "../../../environment";
+
+const BASE_URL = `http://${HOST}`;
 const PORT = ":5002";
 
 const LOGIN_URI = "/login";

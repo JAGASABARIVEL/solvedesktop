@@ -11,6 +11,8 @@ import { KeyloggerService } from '../../../shared/services/keylogger/keylogger.s
 import { OrganizationService } from '../../../shared/services/Organization/organization.service';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 
 @Component({
   selector: 'app-keylogger-dashboard',
@@ -109,61 +111,97 @@ export class KeyloggerDashboardComponent implements OnInit {
         this.initializeGaugeOptions();
         if (selected_date) {
           let required_data = data[employees[0]][selected_date];
-          this.updateCharts(required_data["app_log"], required_data["total_idle_time"]);
-          this.updateReport(required_data["app_log"]);
+          if (required_data) {
+            this.updateCharts(required_data["app_log"], required_data["total_idle_time"]);
+            this.updateReport(required_data["app_log"]);
+          }
+          else {
+            this.reportSummary = []
+            this.keystrokeBarChartData = {}
+            this.appUsagePieChartData = {}
+            this.idleTimeGaugeChartData = {}
+          }
         }
         }
         }
     )
   }
 
+  loadingReport = false;
   updateReport(data) {
+    this.loadingReport = true;
     let localReportSummary = []
     for (let [application, keystrokes] of Object.entries(data)) {
-      localReportSummary.push({"name": application, "keystrokes": keystrokes["total_key_strokes"]});
+      if (keystrokes["total_key_strokes"] > 0) {
+        let applicationSplit = application.split("-").pop(); // Get the last part of the key
+        let foundIndex = localReportSummary.findIndex((appdata)=>appdata['name'] === applicationSplit);
+        if (foundIndex >= 0) {
+          localReportSummary[foundIndex]["keystrokes"] += keystrokes["total_key_strokes"]
+        }
+        else {
+          localReportSummary.push({"name": applicationSplit, "keystrokes": keystrokes["total_key_strokes"]})
+        }
+      }
     }
     this.reportSummary = localReportSummary;
+    this.loadingReport = false;
     console.log("this.reportSummary ", this.reportSummary);
   }
 
+  chartPlugins = [ChartDataLabels];
   initializeData(): void {
 
     // Populate application options
     const allApplications = new Set();
     Object.values(this.productivityData).forEach((dates: any) => {
       Object.values(dates).forEach((log: any) => {
-        Object.keys(log.app_log).forEach(app => allApplications.add(app));
+        Object.keys(log?.app_log).forEach(app => allApplications.add(app));
       });
     });
 
+    
     // Chart options
-    this.chartOptions = {
-      responsive: true,
-      maintainAspectRatio: false,  // Allows better fitting
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom', // Moves legend below the chart instead of side
-          labels: {
-            font: {
-              size: 12 // Reduce font size for more labels
-            },
-            padding: 10
-          }
+this.chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,  
+  plugins: {
+    legend: {
+      display: true,
+      position: 'bottom',
+      labels: {
+        font: {
+          size: 12 
         },
-        tooltip: {
-          callbacks: {
-            label: function (tooltipItem) {
-              let value = tooltipItem.raw;
-              return `${tooltipItem.label}: ${value} strokes`;
-            }
-          }
-        }
-      },
-      layout: {
-        padding: 10 // Ensures chart has enough space
+        padding: 10
       }
-    };
+    },
+    tooltip: {
+      callbacks: {
+        label: function (tooltipItem) {
+          let value = tooltipItem.raw;
+          return `${tooltipItem.label}: ${value} strokes`;
+        }
+      }
+    },
+    datalabels: {
+      display: true, // Always show values
+      color: "#000", // Make text readable
+      padding: 10,  // Space between data and label
+      offset: 5, // Additional offset to prevent overlap
+      font: {
+        weight: "bold",
+        size: 12
+      },
+      align: 'center',  // Make sure label aligns to the center
+      anchor: 'center',  // Makes the label appear inside the pie
+      formatter: (value) => value // Display raw values
+    }
+  },
+  layout: {
+    padding: 10
+  }
+};
+
     
   }
 
@@ -194,7 +232,16 @@ export class KeyloggerDashboardComponent implements OnInit {
     const barData = {};
 
     for (let [application, keystrokes] of Object.entries(data)) {
-      barData[application] = keystrokes["total_key_strokes"]
+      if (keystrokes["total_key_strokes"] > 0) {
+        let applicationSplit = application.split("-").pop(); // Get the last part of the key
+        
+        // If key exists, add the value; otherwise, initialize it
+        if (barData[applicationSplit]) {
+          barData[applicationSplit] += keystrokes["total_key_strokes"];
+        } else {
+          barData[applicationSplit] = keystrokes["total_key_strokes"];
+        }
+      }
     }
 
     //data.forEach(entry => {
@@ -226,7 +273,7 @@ export class KeyloggerDashboardComponent implements OnInit {
 
   // Since all the records from same emploee and from same date just split based on application the idle time should be same.
   // Also convert to minutes from seconds
-  const totalIdleTime = actualtotalIdleTime / 60;
+  const totalIdleTime = Math.floor(actualtotalIdleTime / 60);
   const maxIdleTime = 540 * 60; // Example max time: 9 hours which is in minutes
   const idleTimePercentage = (totalIdleTime / maxIdleTime) * 100;
 
@@ -250,13 +297,32 @@ initializeGaugeOptions(): void {
         callbacks: {
           label: (tooltipItem) => `Idle Time: ${tooltipItem.raw} mins`
         }
+      },
+      legend: {
+        display: true // Hide legend for cleaner look
+      },
+      datalabels: {
+        display: true, // Always show values
+        color: "#000",
+        font: {
+          size: 16,
+          weight: "bold"
+        },
+        formatter: (value) => `${value} mins`,
+        anchor: "center",
+        align: "center"
       }
     },
-    cutout: '75%', // Controls thickness of the gauge
-    rotation: -90, // Starts at the top
-    circumference: 180 // Semi-circle gauge
+    cutout: "80%", // Adjust thickness of the gauge
+    rotation: -90, // Starts from top
+    circumference: 360 // Semi-circle gauge
   };
-}
+
+
+  this.gaugeChartOptions = {
+  };
+
+}  
 
 
 }

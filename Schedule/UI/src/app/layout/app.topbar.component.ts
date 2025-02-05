@@ -43,7 +43,27 @@ export class AppTopBarComponent {
                 }
             }
         ];
+
+        //this.resetInactivityTimer();
+
+        // Track user activity (reset inactivity timer on any of these events)
+        //window.addEventListener('mousemove', this.resetInactivityTimer);
+        //window.addEventListener('keydown', this.resetInactivityTimer);
+        //window.addEventListener('click', this.resetInactivityTimer);
     }
+
+    inactivityTimeout;
+    inactivityLimit = 30 * 60 * 1000; // 30 minutes in milliseconds
+    resetInactivityTimer() {
+        clearTimeout(this.inactivityTimeout);
+        this.inactivityTimeout = setTimeout(() => {
+            // Clear localStorage after inactivity period
+            localStorage.clear();
+            //this.router.navigate(['login']);
+        }, this.inactivityLimit);
+    }
+    
+    
 
     profileViewButton() {
         this.router.navigate(['me']);
@@ -53,4 +73,6 @@ export class AppTopBarComponent {
         localStorage.clear();
         this.router.navigate(['login']);
     }
+
+    
 }
