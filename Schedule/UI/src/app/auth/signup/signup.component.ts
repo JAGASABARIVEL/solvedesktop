@@ -75,6 +75,7 @@ export class SignupComponent implements OnInit {
         user_platform: [''],
         user_platform_key: [''],
         robo_name_key: [''],
+        user_app_id: [''],
         user_login_id: [''],
         user_password: ['', [Validators.required, Validators.minLength(8)]],
         user_confirm_password: ['', [Validators.required]]
@@ -135,6 +136,7 @@ signupButton() {
         "user_type": this.formGroup.value.user_role,
         "organization": this.formGroup.value.user_organization,
         "platform_name": this.formGroup.value.user_platform.name,
+        "app_id": this.formGroup.value.user_app_id,
         "login_id": this.formGroup.value.user_login_id,
         "platform_login_credentials": this.formGroup.value.user_platform_key,
         "robo_name": this.formGroup.value.robo_name_key,

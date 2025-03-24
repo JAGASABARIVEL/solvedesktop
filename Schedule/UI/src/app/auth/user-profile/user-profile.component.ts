@@ -7,6 +7,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
+import { TextareaModule } from 'primeng/textarea';
 import { LoginResponseModel } from '../login/login.model';
 import { Router } from '@angular/router';
 import { PlatformService } from '../../shared/services/Platform/platform.service';
@@ -15,6 +16,7 @@ import { ToastModule } from 'primeng/toast';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { OrganizationService } from '../../shared/services/Organization/organization.service';
+import { FloatLabelModule } from 'primeng/floatlabel';
 
 
 
@@ -32,7 +34,9 @@ import { OrganizationService } from '../../shared/services/Organization/organiza
     DropdownModule,
     ToastModule,
     InputGroupModule,
-    InputGroupAddonModule
+    InputGroupAddonModule,
+    TextareaModule,
+    FloatLabelModule
   ],
   providers: [
     MessageService
@@ -63,7 +67,8 @@ export class UserProfileComponent implements OnInit {
         this.formGroup = this.formBuilder.group({
           selected_platform_ctrl: ['', [Validators.required]],
           login_id_form_filed_ctrl: ['', [Validators.required]],
-          token_form_filed_ctrl: ['', [Validators.required]]
+          app_id_form_field_ctrl: ['', [Validators.required]],
+          token_form_filed_ctrl: ['', [Validators.required]],
         });
   }
 
@@ -78,6 +83,7 @@ export class UserProfileComponent implements OnInit {
       platform_name: undefined,
       token: undefined,
       login_id: undefined,
+      app_id: undefined,
       owner_id: this.user.id,
       status: 'active'
     }
@@ -120,6 +126,7 @@ export class UserProfileComponent implements OnInit {
       id: undefined,
       platform_name: undefined,
       token: undefined,
+      app_id: undefined,
       login_id: undefined,
       owner_id: this.user.id,
       status: 'active'     
@@ -133,8 +140,9 @@ export class UserProfileComponent implements OnInit {
     
     
     this.new_platform.platform_name = this.formGroup.value.selected_platform_ctrl.name.toLowerCase() + '_' + this.platforms.length;
-    this.new_platform.login_id = this.formGroup.value.login_id_form_filed_ctrl
-    this.new_platform.token = this.formGroup.value.token_form_filed_ctrl
+    this.new_platform.login_id = this.formGroup.value.login_id_form_filed_ctrl;
+    this.new_platform.token = this.formGroup.value.token_form_filed_ctrl;
+    this.new_platform.app_id = this.formGroup.value.app_id_form_field_ctrl;
     this.new_platform.status = 'active';
     this.platforService.createPlatform(this.new_platform).subscribe(
       (data) => {

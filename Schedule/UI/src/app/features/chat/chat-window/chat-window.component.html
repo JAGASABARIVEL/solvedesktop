@@ -12,6 +12,47 @@
         </div>
 </p-dialog>
 
+<p-dialog header="Open Conversation" [modal]="true" [(visible)]="openConversationVisible" [style]="{ width: '50rem' }">
+	<p-progress-spinner *ngIf="loadingTemplates"/>
+	<span class="p-text-secondary block mb-2">Select template.</span>
+        <p-select
+          id="template_dropdown"
+          [options]="avaliable_templates"
+          optionLabel="name"
+          class="w-full p-1"
+          styleClass="mb-4"
+          [filter]="true"
+          filterBy="name"
+		  [(ngModel)]="selectedTemplate"
+          [showClear]="true"
+          optionLabel="name"
+		  appendTo="body"
+		  (onChange)="onSelectTemplate()"
+          />
+	<div class="flex justify-content-center">
+		<app-message-preview [selectedTemplateForPreview]="selectedTemplate"></app-message-preview>
+	</div>
+
+	<!-- Dynamic Form Fields -->
+    <div class="grid">
+        <div class="col-4" *ngFor="let field of dynamicFields; let i = index">
+            <p-floatlabel>
+                <input 
+                    pInputText 
+                    [(ngModel)]="fieldValues[field]" 
+                    [id]="'field-' + i"
+                />
+                <label [for]="'field-' + i">{{ field }}</label>
+            </p-floatlabel>
+        </div>
+    </div>
+	
+	<div class="flex justify-end gap-2">
+		<p-button label="Cancel" severity="secondary" (click)="openConversationVisible = false" />
+		<p-button *ngIf="this.selectedTemplate && isFiledValuesValid" label="Save" (click)="startNewConversation()"/>
+	</div>
+</p-dialog>
+
 <div class="whatsapp-container">
 	<!-- Sidebar -->
 	<div class="sidebar">
@@ -54,9 +95,12 @@
 		  <div class="meta">
 			<p class="name">{{ user.name }}</p>
 			<p *ngIf="user?.name === ''" class="name">{{ user?.phone }}</p>
-			<p class="preview">
+			<p class="preview" *ngIf="!user.messages[user.messages?.length - 1]?.template">
 			  {{ user.messages[user.messages?.length - 1]?.message_body || '' }}
 			</p>
+			<p class="preview" *ngIf="user.messages[user.messages?.length - 1]?.template">
+				{{ (user.messages[user.messages?.length - 1]?.template | performJsonOp: 'load').components[1].text }} 
+			  </p>
 		  </div>
 		  <div class="time-container">
 			<div class="time" *ngIf="user.messages[user.messages?.length - 1]?.received_time">
@@ -165,7 +209,7 @@
 			</p-avatar>
 			<div *ngIf="msg.type !== 'start_tag' && msg.type !== 'end_tag'"  class="message-content">
 				<span *ngIf="msg.type !== 'customer'" class="sender-name" [style.color]="getEmployeeNameFromId(msg.sender)?.color">{{ getEmployeeNameFromId(msg.sender)?.name }}</span>
-				<p>{{ msg?.message_body || '' }}
+				<p *ngIf="!msg.template">{{ msg?.message_body || '' }}
 				    <span *ngIf="msg.sent_time" class="timestamp">{{ msg.sent_time | date:'shortTime' }}</span>
 				    <span *ngIf="msg.received_time" class="timestamp">{{ msg.received_time | date:'shortTime' }}</span>
 
@@ -181,9 +225,30 @@
 						<span class="message-status" *ngIf="msg.status === 'failed'" [pTooltip]="msg.status_details" tooltipPosition="top">
 							<i class="pi pi-times failed-icon"></i>
 						</span>
-
 					</span>
 			    </p>
+				<p *ngIf="msg.template">
+					<app-message-preview [selectedTemplateForPreview]="msg.template"></app-message-preview>
+					<span *ngIf="msg.sent_time" class="timestamp">{{ msg.sent_time | date:'shortTime' }}</span>
+				    <span *ngIf="msg.received_time" class="timestamp">{{ msg.received_time | date:'shortTime' }}</span>
+
+					<!-- Status Icons -->
+					<span class="status-icon">
+						<i *ngIf="msg.status === 'sent_to_server'" class="pi pi-check"></i>
+						<!-- Double Tick -->
+						<ng-container *ngIf="msg.status === 'sent' || msg.status === 'delivered' || msg.status === 'read'">
+							<i class="pi pi-check double-tick first-tick" [ngClass]="{'read': msg.status === 'read' || msg.status === 'sent'}"></i>
+							<i class="pi pi-check double-tick second-tick" [ngClass]="{'read': msg.status === 'read' || msg.status === 'sent'}"></i>
+						</ng-container>
+						
+						<span class="message-status" *ngIf="msg.status === 'failed'" [pTooltip]="msg.status_details" tooltipPosition="top">
+							<i class="pi pi-times failed-icon"></i>
+						</span>
+					</span>
+
+				</p>
+				
+				
 			</div>
 		  </li>
 		</ul>

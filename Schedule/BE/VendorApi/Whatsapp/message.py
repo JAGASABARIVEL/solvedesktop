@@ -1,4 +1,5 @@
 import time
+import json
 
 import requests
 from VendorApi.Whatsapp import api
@@ -20,23 +21,11 @@ class Message:
     def send_message(self, recipient_id, message_body):
         pass
 
-    def check_message_status(self, recipient_id):
-        pass
-
 
 class TextMessage(Message):
     def __init__(self, phone_number_id, token, client_application="schedule"):
         super().__init__(phone_number_id, token)
         self.client_application = client_application
-
-    def generate_status_url(self, recipient_phone_number, messageid):
-        if self.client_application == "schedule":
-            return api.status.format(
-                phone_number_id=self.phone_number_id,
-                recipient_phone_number=recipient_phone_number,
-                messageid=messageid
-            )
-
 
     def send_message(self, recipient_id, message_body):
         payload = {
@@ -55,23 +44,63 @@ class TextMessage(Message):
             raise SendException(error_response.get("error", {}).get("message", "Unknown Error - Please engage engineering."))
         return response
 
-    def check_message_status(self, recipient_id, messageid):
-        try:
-            def read_status():
-                return requests.get(
-                    self.generate_status_url(recipient_id, messageid),
-                    verify=True
-                ).json()
-            max_time = time.time() + MAX_TIMEOUT
-            while time.time() < max_time:
-                response = read_status()
-                if not response.get(recipient_id):
-                    time.sleep(0.1)
-                    continue
-                status = response.get(recipient_id).get("status")
-                if status == 'failed':
-                    raise SendException(response.get(recipient_id).get('error_details'))
-                return status
-            raise WebHookException("Timed out waiting for message status")
-        except Exception as e:
-            raise WebHookException(e)
+
+class TemplateMessage(Message):
+    def __init__(self, waba_id, phone_number_id, token, client_application="schedule"):
+        super().__init__(phone_number_id, token)
+        self.get_template_url = api.get_templates.format(whatsapp_business_id=waba_id)
+        self.client_application = client_application
+
+    def get_templates(self):
+        response = requests.get(
+            self.get_template_url,
+            headers=self.headers
+        )
+        if response.status_code not in range(200, 299):
+            error_response = response.json()
+            raise SendException(error_response.get("error", {}).get("message", "Unknown Error - Please engage engineering."))
+        return response
+    
+    def template_payload_body(self, parameter_body):
+        return {
+            "components": [
+                {
+                    "type": "body",
+                    "parameters": parameter_body
+                }
+            ]
+        }
+
+    
+    def send_message(self, recipient_id, message_body, template):
+        template_obj = template
+        if isinstance(template_obj, str):
+            template_obj = json.loads(template)
+        #print("template_obj ", template_obj)
+        payload = {}
+        if not message_body:
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": recipient_id,
+                "type": "template",
+                "template": { "name": template_obj["name"], "language": { "code": "en_US" } }
+            }
+        else:
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": recipient_id,
+                "type": "template",
+                "template": { "name": template_obj["name"], "language": { "code": "en_US" }, **self.template_payload_body(message_body)}
+            }
+        
+        print("Template Payload ", payload)
+        response = requests.post(
+            self.send_url,
+            json=payload,
+            headers=self.headers
+        )
+        if response.status_code not in range(200, 299):
+            error_response = response.json()
+            print("error_response ", error_response)
+            raise SendException(error_response.get("error", {}).get("message", "Unknown Error - Please engage engineering."))
+        return response

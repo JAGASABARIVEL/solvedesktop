@@ -1,137 +1,87 @@
+<p-toast></p-toast>
 
-<p-toast />
-<div class="card">
-    <h3 class="p-text-center">{{user.name}}</h3>
-    <p-divider />
-            
+<div class="card p-4">
+    <!-- User Information -->
+    <h3 class="text-center mb-3">{{ user.name }}</h3>
+    <p-divider></p-divider>
+
     <div class="grid">
         <div class="col-4">
-            <p-inputgroup styleClass="mb-5">
-                <p-inputgroup-addon>
-                    <i class="pi pi-at"></i>
-                </p-inputgroup-addon>
-                <input
-                      disabled
-                      id="email"
-                      type="text"
-                      pInputText
-                      [(ngModel)]="user.email"
-                      placeholder="example@email.com"
-                />
+            <p-inputgroup class="mb-3">
+                <p-inputgroup-addon><i class="pi pi-at"></i></p-inputgroup-addon>
+                <input disabled id="email" type="text" pInputText [(ngModel)]="user.email" placeholder="example@email.com" />
             </p-inputgroup>
 
-            <p-inputgroup styleClass="mb-5">
-                <p-inputgroup-addon>
-                    <i class="pi pi-phone"></i>
-                </p-inputgroup-addon>
-                <input
-                      disabled
-                      id="email"
-                      type="text"
-                      pInputText
-                      [(ngModel)]="user.phone"
-                      placeholder="example@email.com"
-                    />
+            <p-inputgroup class="mb-3">
+                <p-inputgroup-addon><i class="pi pi-phone"></i></p-inputgroup-addon>
+                <input disabled id="phone" type="text" pInputText [(ngModel)]="user.phone" placeholder="Phone Number" />
             </p-inputgroup>
 
-            <p-inputgroup styleClass="mb-5">
-                <p-inputgroup-addon>
-                    <i class="pi pi-briefcase"></i>
-                </p-inputgroup-addon>
-                <input
-                      disabled
-                      id="org"
-                      type="text"
-                      pInputText
-                      [(ngModel)]="org_name"
-                      placeholder="example@email.com"
-                    />
+            <p-inputgroup class="mb-3">
+                <p-inputgroup-addon><i class="pi pi-briefcase"></i></p-inputgroup-addon>
+                <input disabled id="org" type="text" pInputText [(ngModel)]="org_name" placeholder="Organization Name" />
             </p-inputgroup>
-
-        </div>
-        
-
-        
-
-        
-
-        
-    
-        
-    </div>
-    <p-divider />
-    
-    
-    
-    
-    <div *ngIf="user.role == 'owner'" class="grid">
-        <div class="flex justify-content-between col-8">
-            <h4>Platforms</h4>
         </div>
     </div>
 
-   
-    <div class="field" *ngIf="user.role == 'owner'">
+    <p-divider></p-divider>
+
+    <!-- Platforms Section -->
+    <div *ngIf="user.role == 'owner'" class="mb-4">
+        <h4 class="mb-3">Platforms</h4>
         <div class="formgrid grid" *ngFor="let platform of platforms">
-            <div class="field-radiobutton col-12">
+            <div class="field col-12">
                 <i *ngIf="platform.platform_name.startsWith('whatsapp')" class="pi pi-whatsapp mr-2"></i>
-                <label>{{platform.platform_name}}</label>
+                <label>{{ platform.platform_name }}</label>
             </div>
-            <div class="field-radiobutton col-4">
-                <input
-                  id="loginid"
-                  type="text"
-                  pInputText
-                  [(ngModel)]="platform.login_id"
-                  placeholder="Login Id"
-                />
+            <div class="field col-3">
+                <input id="app_id" type="text" pInputText [(ngModel)]="platform.app_id" placeholder="App Id" />
             </div>
-            <div class="field-radiobutton col-4">
-                <input
-                  id="token"
-                  type="text"
-                  pInputText
-                  [(ngModel)]="platform.token"
-                  placeholder="Authentication Token"
-                />
+            <div class="field col-3">
+                <input id="loginid" type="text" pInputText [(ngModel)]="platform.login_id" placeholder="Login Id" />
+            </div>
+            <div class="field col-6">
+                <p-floatlabel>
+                    <textarea pTextarea id="token" [(ngModel)]="platform.token" rows="5" class="w-full"></textarea>
+                    <label for="token">Authentication Token</label>
+                </p-floatlabel>
             </div>
         </div>
     </div>
 
-    <div *ngIf="user.role == 'owner'" class="col-12 flex justify-content-start">
-        <p-button label="Add" (click)="showDialog()" icon="pi pi-plus" styleClass="mr-2"></p-button>
+    <!-- Action Buttons -->
+    <div *ngIf="user.role == 'owner'" class="flex gap-3">
+        <p-button label="Add" (click)="showDialog()" icon="pi pi-plus" class="mr-2"></p-button>
         <p-button label="Save" (click)="onSave()" icon="pi pi-save"></p-button>
     </div>
-    
+
+    <!-- Add Platform Dialog -->
     <p-dialog header="Add Platform" [modal]="true" [(visible)]="visible" [style]="{ width: '25rem' }">
         <form [formGroup]="formGroup">
-            <div class="flex align-items-center gap-3 mb-5">
-                <label for="platform" class="font-semibold w-6rem">Platform</label>
-                <p-dropdown
-                            styleClass="w-full p-2"
-                            [options]="supported_platforms"
-                            formControlName="selected_platform_ctrl"
-                            optionLabel="name"
-                            [filter]="true"
-                            filterBy="name"
-                            [showClear]="true"
-                            placeholder="Select a platform"
-                            >
-                </p-dropdown>
+            <div class="field mb-3">
+                <label for="platform" class="font-semibold">Platform</label>
+                <p-dropdown class="w-full" [options]="supported_platforms" formControlName="selected_platform_ctrl" optionLabel="name" [filter]="true" filterBy="name" [showClear]="true" placeholder="Select a platform"></p-dropdown>
             </div>
-            <div class="flex align-items-center gap-3 mb-5">
-                <label for="login_id" class="font-semibold w-6rem">Login Id</label>
-                <input pInputText id="login_id" formControlName="login_id_form_filed_ctrl" class="flex-auto" autocomplete="off" />
+
+            <div class="field mb-3">
+                <label for="app_id" class="font-semibold">App Id</label>
+                <input pInputText id="app_id" formControlName="app_id_form_field_ctrl" class="w-full" autocomplete="off" />
             </div>
-            <div class="flex align-items-center gap-3 mb-5">
-                <label for="token" class="font-semibold w-6rem">Token</label>
-                <input pInputText id="token" formControlName="token_form_filed_ctrl" class="flex-auto" autocomplete="off" />
+
+            <div class="field mb-3">
+                <label for="login_id" class="font-semibold">Login Id</label>
+                <input pInputText id="login_id" formControlName="login_id_form_filed_ctrl" class="w-full" autocomplete="off" />
             </div>
+
+            <div class="field mb-3">
+                <label for="token" class="font-semibold">Token</label>
+                <input pInputText id="token" formControlName="token_form_filed_ctrl" class="w-full" autocomplete="off" />
+            </div>
+
             <div class="flex justify-content-end gap-2">
-                <p-button label="Cancel" severity="secondary" (onClick)="visible = false" />
-                <p-button [disabled]="formGroup.invalid" label="Save" icon="pi pi-save" (onClick)="onAddPlatform()" />
+                <p-button label="Cancel" severity="secondary" (click)="visible = false"></p-button>
+                <p-button [disabled]="formGroup.invalid" label="Save" icon="pi pi-save" (click)="onAddPlatform()"></p-button>
             </div>
         </form>
-        
     </p-dialog>
 </div>

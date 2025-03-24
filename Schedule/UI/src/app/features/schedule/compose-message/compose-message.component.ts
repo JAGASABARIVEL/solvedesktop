@@ -7,7 +7,6 @@ import { InputGroupModule } from 'primeng/inputgroup';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { CalendarModule } from 'primeng/calendar';
 import { EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -28,6 +27,7 @@ import { ScheduleEventService } from '../../../shared/services/Events/schedule-e
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
+import { MessageTemplatesComponent } from '../../campaign/message-templates/message-templates.component';
 
 
 
@@ -52,7 +52,9 @@ import { SelectModule } from 'primeng/select';
     ToastModule,
     BadgeModule,
     BlockUIModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+
+    MessageTemplatesComponent
   ],
   providers: [MessageService],
   templateUrl: './compose-message.component.html',
@@ -68,11 +70,13 @@ export class ComposeMessageComponent implements OnInit {
   platform!: any;
   contact_types = supported_contact_types;
   datasource = supported_datasource;
+  
   frequency = supported_frequencies;
 
   individual_contacts: any = undefined;
   selected_contacts_for_creating_group!: any;
   selected_contact_type: any = undefined;
+  selected_template: any= undefined;
   contacts!: any;
   selected_contacts: any = undefined;
   contact_list_placeholder!: string;
@@ -166,7 +170,7 @@ export class ComposeMessageComponent implements OnInit {
   }
 
   onScheduleNameSelected() {
-    if (this.schedule_name?.length == 0) {
+    if (this.schedule_name?.length === 0) {
       this.schedule_name = undefined;
       this.selected_contact_type = undefined;
       this.selected_contacts = undefined;
@@ -256,7 +260,7 @@ export class ComposeMessageComponent implements OnInit {
   }
 
   onContactSelected() {
-    if (this.selected_contacts?.length == 0) {
+    if (this.selected_contacts?.length === 0) {
       // This is for hiding next element
       this.selected_contacts = undefined;
       this.selected_date_time = undefined;
@@ -268,7 +272,7 @@ export class ComposeMessageComponent implements OnInit {
   }
 
   onScheduleDateTimeSelected() {
-    if (String(this.selected_date_time)?.length == 0) {
+    if (String(this.selected_date_time)?.length === 0) {
       this.selected_date_time = undefined;
       this.selected_frequency = undefined;
       this.selected_platform = undefined;
@@ -278,19 +282,29 @@ export class ComposeMessageComponent implements OnInit {
   }
 
   onFrequencySelected() {
-    if (String(this.selected_frequency)?.length == 0) {
+    if (String(this.selected_frequency)?.length === 0) {
       this.selected_frequency = undefined;
     }
     console.log("Selected frequence ", this.selected_frequency);
   }
 
   onPlatformSelected () {
-    if (String(this.selected_platform)?.length == 0) {
+    if (!this.selected_platform) {
       this.selected_platform = undefined;
       this.selected_datasource = undefined;
       this.message_text = undefined;
     }
     console.log("Selected platform ", this.selected_platform);
+  }
+
+  onTemplateSelected(selectedTemplate) {
+    console.log("this.selected_template ", this.selected_template);
+    if (selectedTemplate?.name === "None") {
+      this.selected_template = undefined;
+    }
+    else {
+      this.selected_template = selectedTemplate;
+    }
   }
 
   onMessageText(event: EditorTextChangeEvent) {
@@ -354,13 +368,13 @@ formatSize(bytes: number): string {
     this.blockedDocument = true;
     this.contactServive.createContact(this.new_contact).subscribe(
       (data) => {
-        this.blockedDocument = true;
+        this.blockedDocument = false;
         this.cd.markForCheck();
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Contact Added' });
         this.loadUserContacts();
       },
       (err) => {
-        this.blockedDocument = true;
+        this.blockedDocument = false;
         this.cd.markForCheck();
         this.messageService.add( { severity: 'error', summary: 'Error', detail: 'Contact Not Added'} );
         console.log("Compose Message | Contact addition failed", err)
@@ -379,7 +393,7 @@ formatSize(bytes: number): string {
         (data) => {
           console.log("Compose Message | Added member to group");
           created_contacts += 1;
-          if (created_contacts == this.selected_contacts_for_creating_group.length) {
+          if (created_contacts === this.selected_contacts_for_creating_group.length) {
             this.blockedDocument = false;
             this.cd.markForCheck();
             this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Group Created and Memember Got Added' });
@@ -416,6 +430,7 @@ formatSize(bytes: number): string {
         console.log("Compose Message | Created a new group ", data);
         this.newMemberToGroup.group_id = data.id;
         this.addMembers();
+        this.blockedDocument = false;
       },
       (err) => {
         console.log("Compose Message | Group creation failed", err)
@@ -430,11 +445,11 @@ formatSize(bytes: number): string {
 
 
   add_new_contact() {
-    if (this.selected_contact_type?.name == "User") {
+    if (this.selected_contact_type?.name === "User") {
       this.create_group_modal_visible = false;
       this.add_contact_modal_visible = true;
     }
-    else if (this.selected_contact_type?.name == "Group") {
+    else if (this.selected_contact_type?.name === "Group") {
       this.add_contact_modal_visible = false;
       this.create_group_modal_visible = true;
     }
@@ -485,26 +500,27 @@ formatSize(bytes: number): string {
     }
 
     for (let contact of this.selected_contacts) {
-      for (let selected_pltfrm of this.selected_platform) {
+      //for (let selected_pltfrm of this.selected_platform) {
         this.composeMessagePayload = {
           name: this.schedule_name,
           uploaded_excel: this.files[0],
           organization_id: this.profile.organization,
-          platform: selected_pltfrm?.id,
+          platform: this.selected_platform?.id,
           frequency: this.selected_frequency,
           user_id: this.profile.id,
           recipient_type: this.selected_contact_type?.value,
           recipient_id: contact?.id,
           message_body: this.message_text,
           scheduled_time: this.formatDateToCustomString(this.selected_date_time),
-          datasource: dataSourcePayload
+          datasource: dataSourcePayload,
+          template: this.selected_template ? JSON.stringify(this.selected_template) : undefined
         }
         console.log("this.composeMessagePayload ", this.composeMessagePayload);
         this.scheduleService.createSchedule(this.composeMessagePayload).subscribe(
           (res) => {
             total_messages += 1;
-            console.log("Compose Message | Schedule created ", res);
-            if (total_messages == this.selected_contacts.length * this.selected_platform.length) {
+            console.log("Compose Message | Schedule created ", res, total_messages, this.selected_contacts.length);
+            if (total_messages === this.selected_contacts.length) {
               this.cd.markForCheck();
               this.scheduleEventService.emitEvent("SCHEDULED");
               this.messageService.add({ severity: 'success', summary: 'Success', detail: 'All messages Scheduled' });
@@ -518,9 +534,8 @@ formatSize(bytes: number): string {
             this.onReset();
           }
         )
-      }
+      //}
     }
-    
-    
+    this.blockedDocument = false;
   }
 }

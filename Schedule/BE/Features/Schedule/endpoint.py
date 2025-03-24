@@ -12,7 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import create_engine
 
 from VendorApi.Whatsapp import SendException, WebHookException
-from VendorApi.Whatsapp.message import TextMessage
+from VendorApi.Whatsapp.message import TextMessage, TemplateMessage
 
 import pyexcel
 from flask import request, jsonify
@@ -24,6 +24,7 @@ def init_endpoint(app_context, app, Session):
         # Endpoints
 
         @app.route('/organization/<org_id>/robo', methods=['GET'])
+        @cross_origin()
         def get_robo_detail(org_id):
             with Session() as session:
                 try:
@@ -34,6 +35,7 @@ def init_endpoint(app_context, app, Session):
                     return jsonify({"error": str(e)}), 400
 
         @app.route('/organization', methods=['POST'])
+        @cross_origin()
         def create_organization():
             with Session() as session:
                 data = request.json
@@ -82,6 +84,7 @@ def init_endpoint(app_context, app, Session):
             } for organization in organizations])
 
         @app.route('/organization/<int:id>', methods=['PUT'])
+        @cross_origin()
         def update_organization(id):
             with Session() as session:
                 data = request.json
@@ -99,6 +102,7 @@ def init_endpoint(app_context, app, Session):
                 return jsonify({"error": "Organization not found"}), 404
 
         @app.route('/organization/<int:id>', methods=['DELETE'])
+        @cross_origin()
         def delete_organization(id):
             with Session() as session:
                 organization = Organization.query.get(id)
@@ -123,6 +127,7 @@ def init_endpoint(app_context, app, Session):
                 "id": p.id,
                 "platform_name": p.platform_name,
                 "login_id": p.login_id,
+                "app_id": p.app_id,
                 "token": p.login_credentials,
                 "status": p.status,
             } for p in platforms]), 200
@@ -143,6 +148,7 @@ def init_endpoint(app_context, app, Session):
                     owner_id=data['owner_id'],
                     platform_name=data['platform_name'],
                     login_id=data['login_id'],
+                    app_id = data['app_id'],
                     login_credentials=data['token']
                 )
                 session.add(platform)
@@ -165,6 +171,7 @@ def init_endpoint(app_context, app, Session):
                 if not platform:
                     return jsonify({"error": "Platform not found"}), 404
                 platform.login_id = data['login_id']
+                platform.app_id = data['app_id']
                 platform.login_credentials = data['token']
                 print("Platform token ", data['token'])
                 session.commit()
@@ -217,6 +224,7 @@ def init_endpoint(app_context, app, Session):
 
 
         @app.route('/signup', methods=['POST'])
+        @cross_origin()
         def signup():
             with Session() as session:
                 data = request.json
@@ -279,6 +287,7 @@ def init_endpoint(app_context, app, Session):
                                 platform = Platform(
                                     owner_id=owner_account.id,
                                     platform_name=data['platform_name'],
+                                    app_id=data['app_id'],
                                     login_id=data['login_id'],
                                     login_credentials=data['platform_login_credentials']
                                 )
@@ -308,16 +317,21 @@ def init_endpoint(app_context, app, Session):
                 return jsonify({"error": "UUID is required"}), 400
             with Session() as session:
                 user = session.query(User).filter_by(phone=data['phone']).first()
-                _uuid = session.query(Uuid).filter_by(organization_id=user.organization_id, uuid=uuid).first()
-                if not _uuid:
-                    return jsonify({"error": "No such systems registered in the organization"}), 401
-                if user and user.password == data['password']:  # Verify hash in production
-                    if user.uuid != uuid:
-                        already_assigned_mac_address = User.query.filter_by(uuid=uuid).first()
-                        already_assigned_mac_address.uuid = None
-                        # Update the uuid since the user seems to changed(motherboard replaced) the system
-                        user.uuid = uuid
-                        session.commit()
+                if not user:
+                    return jsonify({"error": "Phone number not found"}), 404
+                if user.password == data['password']:  # Use hashed password check in production
+                    # Check for other users in the same organization with the same UUID
+                    conflicting_users = session.query(User).filter(
+                        User.organization_id == user.organization_id,
+                        User.uuid == uuid,
+                        User.id != user.id
+                    ).all()
+                    # Set UUID to None for conflicting users
+                    for conflict in conflicting_users:
+                        conflict.uuid = None
+                    # Update the current user's UUID
+                    user.uuid = uuid
+                    session.commit()
                     return jsonify({
                         "id": user.id,
                         "name": user.name,
@@ -385,6 +399,7 @@ def init_endpoint(app_context, app, Session):
             message_body = request.form.get('message_body')
             frequency = request.form.get('frequency')
             scheduled_time = request.form.get('scheduled_time')
+            template = request.form.get('template')
             datasource = json.loads(request.form.get('datasource', {}))  # This will be a JSON string
 
             # TODO: This has to be improved to compare the contacts in user/group
@@ -420,6 +435,7 @@ def init_endpoint(app_context, app, Session):
                         message_body=message_body,
                         platform=platform.id,
                         frequency=frequency,
+                        template=template,
                         organization_id=organization_id,
                         datasource=datasource,  # Store the entire datasource configuration
                         excel_filename=",".join(excel_filenames),  # Store filenames as comma-separated string
@@ -483,13 +499,15 @@ def init_endpoint(app_context, app, Session):
                             "scheduled_time": schedule.scheduled_time.isoformat(),
                             "frequency": schedule.frequency,
                             "message_body": schedule.message_body,
-                            "status": schedule.status
+                            "status": schedule.status,
+                            "template": schedule.template
                         })
                     return jsonify(response), 200
             except Exception as e:
                 return jsonify({"error": str(e)}), 400
 
         @app.route('/schedule/<int:schedule_id>', methods=['GET'])
+        @cross_origin()
         def get_schedule(schedule_id):
             try:
                 with Session() as session:
@@ -518,6 +536,7 @@ def init_endpoint(app_context, app, Session):
                     os.remove(filepath)
         
         @app.route('/schedule/<int:schedule_id>', methods=['PUT'])
+        @cross_origin()
         def update_schedule(schedule_id):
             platform = request.form.get('platform')
             recipient_type = request.form.get('recipient_type')
@@ -725,6 +744,7 @@ def init_endpoint(app_context, app, Session):
             return jsonify(result), 200
         
         @app.route('/contacts/<int:organization_id>', methods=['GET'])
+        @cross_origin()
         def get_contact_id_from_phone(organization_id):
             # Get the query parameters for the phone number
             result = Contact.query.filter_by(phone=request.args.get('phone'), organization_id=organization_id).first()
@@ -759,7 +779,7 @@ def init_endpoint(app_context, app, Session):
 
 
         @app.route('/contacts/<int:contact_id>', methods=['DELETE', 'OPTIONS'])
-        @cross_origin(origins="http://localhost:4200")
+        @cross_origin()
         def delete_contact(contact_id):
             with Session() as session:
                 contact = session.query(Contact).get(contact_id)
@@ -885,6 +905,7 @@ def init_endpoint(app_context, app, Session):
                 return jsonify({"message": "Group patch successfull!"}), 200
 
         @app.route('/groups/<int:organization_id>', methods=['GET'])
+        @cross_origin()
         def get_group_id_from_group_name(organization_id):
             # Get the query parameters for the phone number
             result = ContactGroup.query.filter_by(name=request.args.get('group_name'), organization_id=organization_id).first()
@@ -892,6 +913,7 @@ def init_endpoint(app_context, app, Session):
             return jsonify({"id": result.id, "name": result.name, "created_by": result.created_by})
 
         @app.route('/groups', methods=['PUT'])
+        @cross_origin()
         def update_group():
             group_id = request.args.get('group_id')
             if not group_id:
@@ -956,6 +978,7 @@ def init_endpoint(app_context, app, Session):
                     return jsonify({"error": str(e)}), 400
         
         @app.route('/groups/members', methods=['GET'])
+        @cross_origin()
         def get_group_members():
             group_id = request.args.get('group_id')
             if not group_id:
@@ -985,6 +1008,7 @@ def init_endpoint(app_context, app, Session):
 
 
         @app.route('/groups/remove_contact', methods=['DELETE'])
+        @cross_origin()
         def remove_contact_from_group():
             group_id = request.args.get('group_id')
             if not group_id:
@@ -1043,11 +1067,29 @@ def init_endpoint(app_context, app, Session):
                     return jsonify({"error": str(e)}), 500
 
         @app.route('/schedule/ping', methods=["GET"])
+        @cross_origin()
         def ping_schedule_service():
             return jsonify({"message": "Schedule service is alive"}), 200
 
+        @app.route('/campaign/templates/<platform_id>', methods=['GET'])
+        @cross_origin()
+        def get_templates(platform_id):
+            with Session() as session:
+                platform = session.query(Platform).filter_by(id=platform_id).first()
+                if not platform:
+                    return jsonify({"error": "Invalid Argument"}), 400
+                # Whatsapp template
+                approved_templates = TemplateMessage(
+                    waba_id=platform.app_id,
+                    phone_number_id=platform.login_id,
+                    token=platform.login_credentials
+                )
+                response = approved_templates.get_templates().json()
+                #print("response.get ", response, response.get("data"))
+                return jsonify({"whatsapp": response.get("data")})
+
         # Placeholder for platform-specific message sending
-        def send_message(platform_id, recipient_id, message_body):
+        def send_message(platform_id, recipient_id, message_body, template=None):
             with Session() as session:
                 try:
                     platform = session.query(Platform).filter_by(id=platform_id).first()
@@ -1067,12 +1109,23 @@ def init_endpoint(app_context, app, Session):
                             "Message : ", message_body, "\n"
                         )
                         # Send WhatsApp message
-                        if phone_number_id:
+                        if not template:
                             text_message = TextMessage(
                                 phone_number_id=phone_number_id,
                                 token=token
                             )
-                            response = text_message.send_message(recipient_phone_number, message_body)
+                            #response = text_message.send_message(recipient_phone_number, message_body)
+                            #response = response.json()
+                            return "Ok"#response
+                        if template:
+                            approved_templates = TemplateMessage(
+                                waba_id=platform.app_id,
+                                phone_number_id=platform.login_id,
+                                token=platform.login_credentials
+                            )
+                            #response = approved_templates.get_templates().json()
+                            #print("response.get ", response, response.get("data"))
+                            response = approved_templates.send_message(recipient_phone_number, message_body, template)
                             response = response.json()
                             return response
                     else:
@@ -1084,7 +1137,7 @@ def init_endpoint(app_context, app, Session):
                 except Exception as e:
                     raise RuntimeError(f"Failed to send message: {str(e)}")
 
-        def fetch_placeholders_for_recipients(phone_numbers, message_template, datasource):
+        def fetch_placeholders_for_recipients(phone_numbers, message_template, datasource, template):
             with Session() as session:
                 try:
                     substitutions = {}
@@ -1112,7 +1165,7 @@ def init_endpoint(app_context, app, Session):
                             results = engine.execute(query, phone_numbers=tuple(phone_numbers)).fetchall()
                             for row in results:
                                 substitutions[row['phone_number']] = message_template.format(**{placeholder: row['value']})
-                        elif config['type'] == 'excel':
+                        elif config['type'] == 'excel' and not template:
                             # Process Excel data
                             excel_data = config.get('data', [])
                             print("config ", excel_data, phone_numbers)
@@ -1122,10 +1175,37 @@ def init_endpoint(app_context, app, Session):
                                     row['Phone'] = session.query(Contact.name).filter_by(phone=excel_phone_number).first()[0] # Safe to use [0] since tuple would be having only one elemnt which is name
                                     print("row ", row)
                                     substitutions[excel_phone_number] = message_template.format(**row)
+                        elif config['type'] == 'excel' and template:
+                            # Process Excel data
+                            excel_data = config.get('data', [])
+                            print("config template ", excel_data, phone_numbers)
+                            for row in excel_data:
+                                excel_phone_number = str(row.get('Phone'))
+                                if excel_phone_number in phone_numbers:
+                                    row['Phone'] = session.query(Contact.name).filter_by(phone=excel_phone_number).first()[0] # Safe to use [0] since tuple would be having only one elemnt which is name
+                                    print("row Here", row)
+                                    headers = [header for header in row.keys() if header != 'Phone']
+                                    print("headers ", headers)
+                                    substitutions[excel_phone_number] = [
+                                        {"type": "text", "parameter_name": str(col), "text": str(row.get(col))}
+                                        for col in headers
+                                    ]
                     return substitutions
                 except Exception as fetch_exception:
                     raise fetch_exception
 
+        def format_template_messages(template, parameters_body):
+            template = json.loads(template)
+            for component in template.get('components'):
+                for buffer in parameters_body.keys():
+                    try:
+                        parameter_index = component["text"].index(buffer)
+                        start_index = parameter_index - 2 # {{
+                        end_index = parameter_index + len(buffer) + 2 # parameter_name}}
+                        component["text"] = component["text"].replace(component["text"][start_index : end_index], parameters_body[buffer])
+                    except ValueError:
+                        continue
+            return json.dumps(template)
 
         def process_message(msg, session):
                 print("Processing message")
@@ -1142,7 +1222,7 @@ def init_endpoint(app_context, app, Session):
                         
                         # Fetch substitutions in batch (using stored procedure or callback)
                         substitutions = fetch_placeholders_for_recipients(
-                            contact, msg.message_body, msg.datasource
+                            contact, msg.message_body, msg.datasource, msg.template
                         )
                         max_failures = len(group_members)
                         actual_failures = 0
@@ -1170,9 +1250,13 @@ def init_endpoint(app_context, app, Session):
                                     organization_id=conversation.organization_id,
                                     platform_id=conversation.platform_id,
                                     user_id=robo_user_id,
-                                    message_body=substituted_message,
+                                    message_body="TEMPLATE" if msg.template else substituted_message,
                                     status="failed",
                                     messageid=None,
+                                    template=format_template_messages(
+                                        msg.template,
+                                        {param["parameter_name"] : param["text"] for param in substituted_message}
+                                    )
                                 )
                                 session.add(user_message)
                                 session.commit()
@@ -1180,6 +1264,7 @@ def init_endpoint(app_context, app, Session):
                                     msg.platform,
                                     member.contact_id,
                                     substituted_message,
+                                    msg.template
                                 )
                                 msg_id = response['messages'][0].get('id')
                                 user_message.messageid = msg_id
@@ -1228,7 +1313,7 @@ def init_endpoint(app_context, app, Session):
                         if not contact:
                             raise Exception("Unknown recipient id")
                         substitutions = fetch_placeholders_for_recipients(
-                            [contact], msg.message_body, msg.datasource
+                            [contact], msg.message_body, msg.datasource, msg.template
                         )
                         substituted_message = substitutions.get(contact, None)#msg.message_body)
                         robo_name = session.query(Organization).filter_by(id=org_id).first().robo_name
@@ -1249,13 +1334,17 @@ def init_endpoint(app_context, app, Session):
                             organization_id=conversation.organization_id,
                             platform_id=conversation.platform_id,
                             user_id=robo_user_id,
-                            message_body=substituted_message,
+                            message_body="TEMPLATE" if msg.template else substituted_message,
                             status="failed",
-                            messageid=None
+                            messageid=None,
+                            template=format_template_messages(
+                                msg.template,
+                                {param["parameter_name"] : param["text"] for param in substituted_message}
+                            )
                         )
                         session.add(user_message)
                         session.commit()
-                        if not substituted_message:
+                        if not substituted_message and not msg.template:
                             #msg = session.query(ScheduledMessage).get(msg_id)
                             msg.status = 'failed'
                             msg.msg_status = 'failed'
@@ -1279,6 +1368,7 @@ def init_endpoint(app_context, app, Session):
                                 msg.platform,
                                 msg.recipient_id,
                                 substituted_message,
+                                msg.template
                             )
                         except Exception as user_msg_e:
                             user_message.status_details = str(user_msg_e)

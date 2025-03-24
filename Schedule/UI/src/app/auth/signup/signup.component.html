@@ -98,6 +98,10 @@
                         
         
                         <p-floatLabel *ngIf="role_selected=='owner'">
+                            <input *ngIf="role_selected=='owner'" id="app_id" type="text" pInputText controllername="user_app_id" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_app_id">
+                            <label for="app_id">App ID</label>
+                        </p-floatLabel>
+                        <p-floatLabel *ngIf="role_selected=='owner'">
                             <input *ngIf="role_selected=='owner'" id="login_id" type="text" pInputText controllername="user_login_id" class="block w-full md:w-30rem mb-5 p-3" formControlName="user_login_id">
                             <label for="login_id">Login ID</label>
                         </p-floatLabel>

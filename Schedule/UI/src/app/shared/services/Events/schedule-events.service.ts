@@ -8,10 +8,12 @@ export class ScheduleEventService {
     private eventSubject = new Subject<any>();
     private eventAssignmentSubject = new Subject<any>();
     private eventNewConversationSubject = new Subject<any>();
+    private eventCloseConversationSubject = new Subject<any>();
 
     event$ = this.eventSubject.asObservable();
     assignmentEvent$ = this.eventAssignmentSubject.asObservable();
     newConversationEvent$ = this.eventNewConversationSubject.asObservable();
+    closeConversationEvent$ = this.eventCloseConversationSubject.asObservable();
 
 
 
@@ -25,6 +27,10 @@ export class ScheduleEventService {
 
     emitNewConversation(message: any) {
       this.eventNewConversationSubject.next(message);
+    }
+
+    emitCloseConversation(message: any) {
+      this.eventCloseConversationSubject.next(message);
     }
 
 

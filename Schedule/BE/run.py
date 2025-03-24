@@ -1,9 +1,8 @@
-
 from app import create_app
+from waitress import serve
 
-
-# Create the app and pass the filename if needed
+# Create the Flask app object
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(port=5002, debug=False)
+    serve(app, host='0.0.0.0', port=5002)

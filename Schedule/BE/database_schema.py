@@ -21,6 +21,7 @@ class Platform(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('owner_account.id', ondelete='CASCADE'), nullable=False)  # Link to OwnerAccount
     platform_name = db.Column(db.String(50), nullable=False)  # 'whatsapp', 'telegram', 'gmail'
     login_id = db.Column(db.String(50), nullable=False)
+    app_id = db.Column(db.String(50), nullable=False)
     login_credentials = db.Column(db.Text, nullable=False)  # Encrypted credentials
     status = db.Column(db.String(20), default='active')  # Active/inactive
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -128,7 +129,6 @@ class GroupMember(db.Model):
     contacts = db.relationship('Contact', back_populates='groups')
     organization = db.relationship('Organization', back_populates='group_members')
 
-
 class ScheduledMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -152,6 +152,7 @@ class ScheduledMessage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     messageid = db.Column(db.Text, nullable=True)
+    template = db.Column(db.Text, nullable=True)
 
     __table_args__ = (
         UniqueConstraint('name', 'organization_id', name='unique_name_per_organization'),
@@ -208,6 +209,7 @@ class UserMessage(db.Model):
     status = db.Column(db.String(50), nullable=True)
     status_details = db.Column(db.Text, nullable=True)
     messageid = db.Column(db.Text, nullable=True)
+    template = db.Column(db.Text, nullable=True)
 
 class MessageResponseLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)

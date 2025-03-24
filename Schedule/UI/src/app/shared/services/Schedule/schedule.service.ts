@@ -26,6 +26,7 @@ export class ScheduleService {
     formData.append('recipient_id', schedule.recipient_id.toString());
     formData.append('message_body', schedule.message_body);
     formData.append('scheduled_time', schedule.scheduled_time);
+    formData.append('template', schedule.template);
 
     // Handle nested object (datasource)
     formData.append('datasource', JSON.stringify(schedule.datasource));
@@ -41,6 +42,7 @@ export class ScheduleService {
   }
 
   createSchedule(schedule: any): Observable<any> {
+    console.log("schedule ", schedule)
     const formData = this.convertToFormData(schedule);
     return this.http.post(this.scheduleUrl.create, formData);
   }

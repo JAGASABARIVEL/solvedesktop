@@ -1,0 +1,25 @@
+<div class="p-grid">
+
+
+
+  <!-- WhatsApp-style message preview -->
+  <div class="p-col-4">
+    <div class="card">
+      <p-floatLabel>
+        <p-select
+          id="template_dropdown"
+          [options]="templates"
+          optionLabel="name"
+          class="w-full p-1"
+          styleClass="mb-4"
+          [filter]="true"
+          filterBy="name"
+          [showClear]="true"
+          optionLabel="name" 
+          (onChange)="onTemplateSelect($event.value?.name)"
+          />
+        <label for="template_dropdown">Template</label>
+      </p-floatLabel>
+      <app-message-preview [selectedTemplateForPreview]="selectedTemplate"></app-message-preview>
+    </div>
+  </div>

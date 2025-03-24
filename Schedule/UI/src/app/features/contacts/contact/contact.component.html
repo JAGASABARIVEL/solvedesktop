@@ -87,6 +87,9 @@
                 <th pSortableColumn="category">
                     Category <p-sortIcon field="category" />
                 </th>
+                <th pSortableColumn="description">
+                    Description <p-sortIcon field="description" />
+                </th>
                 <th></th>
             </tr>
         </ng-template>
@@ -116,6 +119,9 @@
                     <p-tag 
                         [value]="product.category || 'N/A'" 
                         [severity]="getSeverity(product.category)" />
+                </td>
+                <td>
+                    {{ product.description }}
                 </td>
 
                 <td>

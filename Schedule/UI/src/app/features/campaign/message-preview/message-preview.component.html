@@ -1,0 +1,25 @@
+<p-card class="preview-card">
+    <ng-template pTemplate="content">
+      <div *ngIf="selectedTemplateForPreview && selectedTemplateForPreview.name != 'None'" class="whatsapp-preview">
+        <div class="whatsapp-message">
+          <p *ngFor="let component of selectedTemplateForPreview.components" [ngClass]="{'whatsapp-header': component.type === 'HEADER', 
+                       'whatsapp-body': component.type === 'BODY', 
+                       'whatsapp-footer': component.type === 'FOOTER'}">
+            {{ component.text }}
+          </p>
+
+          <!-- Display buttons -->
+          <div *ngFor="let component of selectedTemplateForPreview.components" class="whatsapp-buttons">
+            <ng-container *ngIf="component.type === 'BUTTONS'">
+              <button *ngFor="let button of component.buttons" class="whatsapp-button"
+                [ngClass]="{'url-button': button.type === 'URL'}">
+                {{ button.text }}
+              </button>
+            </ng-container>
+          </div>
+        </div>
+      </div>
+
+      <p *ngIf="!selectedTemplateForPreview">No template selected.</p>
+    </ng-template>
+  </p-card>

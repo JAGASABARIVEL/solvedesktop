@@ -82,7 +82,16 @@ export class KeyloggerDashboardComponent implements OnInit {
       );
   }
 
+  resetData() {
+    this.productivityData = []
+    this.reportSummary = []
+    this.keystrokeBarChartData = {}
+    this.appUsagePieChartData = {}
+    this.idleTimeGaugeChartData = {}
+  }
+
   initKeyloggerData(emp_id, selected_date=undefined) {
+    this.resetData();
 
     let payload: any =  {
       "emp_id": emp_id,
@@ -274,7 +283,7 @@ this.chartOptions = {
   // Since all the records from same emploee and from same date just split based on application the idle time should be same.
   // Also convert to minutes from seconds
   const totalIdleTime = Math.floor(actualtotalIdleTime / 60);
-  const maxIdleTime = 540 * 60; // Example max time: 9 hours which is in minutes
+  const maxIdleTime = 540; // Example max time: 9 hours which is in minutes
   const idleTimePercentage = (totalIdleTime / maxIdleTime) * 100;
 
   this.idleTimeGaugeChartData = {

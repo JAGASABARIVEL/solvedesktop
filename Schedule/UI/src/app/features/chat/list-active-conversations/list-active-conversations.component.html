@@ -1,9 +1,19 @@
 <p-toast />
 <div class="card">
+    <p-dialog header="Close Conversation" [modal]="true" [(visible)]="closeConversationVisible" [style]="{ width: '25rem' }">
+        <span class="p-text-secondary block mb-2">Reason for closing the conversation.</span>
+        <div class="flex items-center mb-4">
+            <input pInputText id="username" class="flex-auto" [(ngModel)]="closedReason" autocomplete="off" />
+        </div>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" (click)="closedReason = ''; closeConversationVisible = false" />
+            <p-button label="Save" (click)="closeTask()"/>
+        </div>
+    </p-dialog>
     <p-toast />
     <p-toolbar styleClass="mb-4 gap-2">
         <ng-template pTemplate="left">
-            <p-button
+            <!--p-button
                 severity="danger"
                 label="Close"
                 icon="pi pi-lock"
@@ -13,7 +23,7 @@
                 severity="success"
                 label="Open"
                 icon="pi pi-lock-open"
-                [disabled]="!selectedConversations || !selectedConversations.length" />
+                [disabled]="!selectedConversations || !selectedConversations.length" /-->
         </ng-template>
 
         <ng-template pTemplate="right">
@@ -130,7 +140,8 @@
                           severity="danger" 
                           label="Close" 
                           [rounded]="true" 
-                          [outlined]="true">
+                          [outlined]="true"
+                          (click)="closePreTask(conversation)">
                         </p-button>
                       </ng-container>
                       

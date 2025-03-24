@@ -67,6 +67,10 @@ const CONVERSATION_METRICS_EMP = "/metrics/employee"
 const CONVERSATION_METRICS_ORG = "/metrics/org"
 const CONVERSATION_UNASSIGNED_URI = "";
 
+// Campaign Template
+const CAMPAIGN_URI = "/campaign";
+const TEMPLATE_URI = "/templates"
+
 // Keylogger
 const KEYLOGGER_URI = "/keylogger"
 const KEYLOGGER_PERSIST = "/persist"
@@ -74,6 +78,12 @@ const KEYLOGGER_PERSIST = "/persist"
 
 export class Url {
     url = `${BASE_URL}${PORT}`;
+}
+
+export class CampaignUrl extends Url {
+    get templates() {
+        return `${this.url}${CAMPAIGN_URI}${TEMPLATE_URI}`
+    }
 }
 
 export class AuthUrl extends Url {

@@ -10,6 +10,7 @@ export const routes: Routes = [
         path: '', component: AppLayoutComponent,
         children: [
             { path: '', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+            { path: 'campaign', loadComponent: () => import('./features/campaign/message-templates/message-templates.component').then(m => m.MessageTemplatesComponent) },
             { path: 'schedule', loadComponent: () => import('./features/schedule/schedule.component').then(m => m.ScheduleComponent) },
             { path: 'contacts', loadComponent: () => import('./features/contacts/contacts.component').then(m => m.ContactsComponent) },
             { path: 'chat', loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent) },

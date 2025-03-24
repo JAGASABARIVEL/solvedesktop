@@ -17,7 +17,7 @@
                 <div class="flex align-items-center gap-2">
                     <i class="pi pi-calendar-clock"></i>
                     <span class="font-bold white-space-nowrap m-0">
-                        Schedules
+                        Active
                     </span>
                     <p-badge *ngIf="total_schedules > 0" [value]="total_schedules" />
                     <p-badge *ngIf="total_schedules == 0" [value]="total_schedules" />
@@ -31,7 +31,7 @@
                 <div class="flex align-items-center gap-2">
                     <i class="pi pi-history"></i>
                     <span class="font-bold white-space-nowrap m-0">
-                        Message History
+                        History
                     </span>
                     <p-badge *ngIf="failedMessageCounts > 0" [value]="failedMessageCounts" severity="danger" />
                     <p-badge *ngIf="failedMessageCounts == 0" [value]="failedMessageCounts" />

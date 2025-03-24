@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from flask import request, jsonify
 from flask_cors import cross_origin
 from sqlalchemy import or_, func, case
+import json
 import traceback
 
 from database_schema import IncomingMessage, MessageResponseLog, Conversation, User, UserMessage, Contact, Platform
@@ -11,7 +12,7 @@ from database_schema import IncomingMessage, MessageResponseLog, Conversation, U
 from Features.Messages import ConsumerService
 
 from VendorApi.Whatsapp import SendException, WebHookException
-from VendorApi.Whatsapp.message import TextMessage
+from VendorApi.Whatsapp.message import TextMessage, TemplateMessage
 
 REG_APP_NAME = "conversation"
 
@@ -97,7 +98,8 @@ def init_endpoint(app_context, app, Session):
                             'status': msg.status,
                             'status_details': msg.status_details,
                             'sent_time': msg.sent_time,
-                            'sender': msg.user_id
+                            'sender': msg.user_id,
+                            'template': msg.template,
                         }
                         for msg in user_msgs
                     ]
@@ -186,7 +188,8 @@ def init_endpoint(app_context, app, Session):
                         'status': msg.status,
                         'status_details': msg.status_details,
                         'sent_time': msg.sent_time,
-                        'sender': msg.user_id
+                        'sender': msg.user_id,
+                        'template': msg.template,
                     }
                     for msg in user_msgs
                 ]
@@ -229,7 +232,7 @@ def init_endpoint(app_context, app, Session):
                 return jsonify({'message': 'Conversation assigned successfully', 'conversation_id': conversation.id, 'assigned_user_id': user_id})
 
         # Placeholder for platform-specific message sending
-        def send_message(platform_id, recipient_id, message_body):
+        def send_message(platform_id, recipient_id, message_body, template=None):
             with Session() as session:
                 try:
                     platform = session.query(Platform).filter_by(id=platform_id).first()
@@ -246,10 +249,10 @@ def init_endpoint(app_context, app, Session):
                             "Login Id : ", phone_number_id, "\n", 
                             "From Key : ", token, "\n",
                             "Recipient : ", recipient_phone_number, "\n",
-                            "Message : ", message_body, "\n"
+                            "Message : ", message_body, "\n",
                         )
                         # Send WhatsApp message
-                        if phone_number_id:
+                        if phone_number_id and not template:
                             text_message = TextMessage(
                                 phone_number_id=phone_number_id,
                                 token=token,
@@ -257,6 +260,14 @@ def init_endpoint(app_context, app, Session):
                             )
                             response = text_message.send_message(recipient_phone_number, message_body)
                             print("sent message to whatsapp ", response.content)
+                            return response
+                        elif phone_number_id and template:
+                            approved_templates = TemplateMessage(
+                                waba_id=platform.app_id,
+                                phone_number_id=platform.login_id,
+                                token=platform.login_credentials
+                            )
+                            response = approved_templates.send_message(recipient_phone_number, message_body, template)
                             return response
                     else:
                         raise ValueError("Unsupported platform")
@@ -339,6 +350,21 @@ def init_endpoint(app_context, app, Session):
                 session.commit()
                 return jsonify({'status': 'success', 'message': 'Conversation closed successfully'}), 200
 
+        def format_template_messages(template, parameters_body):
+            if isinstance(template, str):
+                template = json.loads(template)
+            for component in template.get('components'):
+                for buffer in parameters_body.keys():
+                    try:
+                        parameter_index = component["text"].index(buffer)
+                        start_index = parameter_index - 2 # {{
+                        end_index = parameter_index + len(buffer) + 2 # parameter_name}}
+                        component["text"] = component["text"].replace(component["text"][start_index : end_index], parameters_body[buffer])
+                    except ValueError:
+                        continue
+            return template
+
+
         @app.route('/chat/conversations/new', methods=['POST'])
         @cross_origin()
         def new_conversation():
@@ -347,6 +373,10 @@ def init_endpoint(app_context, app, Session):
             platform_id = data.get('platform_id')
             contact_id = data.get('contact_id')
             user_id = data.get('user_id')
+            template = data.get('template')
+            message_body = data.get('template_parameters', {})
+            template_body = [{"type": "text", "parameter_name": key,  "text": value} for key, value in message_body.items()] or None
+            status = "sent_to_server"
             with Session() as session:
                 conversation = session.query(Conversation).filter_by(
                     organization_id=organization_id,
@@ -364,6 +394,44 @@ def init_endpoint(app_context, app, Session):
                     status="active"
                 )
                 session.add(conversation)
+                session.commit()
+                try:
+                    response = send_message(
+                        platform_id=conversation.platform_id,
+                        recipient_id=conversation.contact_id,
+                        message_body=template_body,
+                        template=template
+                    )
+                    response = response.json()
+                    print("response ", response)
+                    
+                except Exception as send_ex:
+                    user_message = UserMessage(
+                        conversation_id=conversation.id,
+                        organization_id=conversation.organization_id,
+                        platform_id=conversation.platform_id,
+                        user_id=user_id,
+                        message_body=json.dumps(message_body),
+                        status='failed',
+                        status_details = str(send_ex),
+                        messageid="Cannot send",
+                        template=json.dumps(format_template_messages(template, message_body))
+                    )
+                    session.add(user_message)
+                    session.commit()
+                    print(send_ex)
+                    return jsonify({'status': 'error', 'message': 'Conversation - Could not deliver the message'}), 500
+                user_message = UserMessage(
+                    conversation_id=conversation.id,
+                    organization_id=conversation.organization_id,
+                    platform_id=conversation.platform_id,
+                    user_id=user_id,
+                    message_body=json.dumps(message_body),
+                    status=status,
+                    messageid=response['messages'][0].get('id'),
+                    template=json.dumps(format_template_messages(template, message_body))
+                )
+                session.add(user_message)
                 session.commit()
                 return jsonify({'id': conversation.id}), 200
         

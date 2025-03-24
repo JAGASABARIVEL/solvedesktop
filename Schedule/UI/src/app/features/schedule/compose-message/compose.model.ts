@@ -14,6 +14,7 @@ export interface ComposeMessageModel {
     user_id: number,
     recipient_type: string,
     recipient_id: number,
+    template: any,
     message_body: string,
     scheduled_time: string,
     datasource: DataSourceModel

@@ -19,6 +19,7 @@ import { ScheduleEventService } from '../../../shared/services/Events/schedule-e
 import { OrganizationService } from '../../../shared/services/Organization/organization.service';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddon } from 'primeng/inputgroupaddon';
+import { DialogModule } from 'primeng/dialog';
 
 
 @Component({
@@ -37,7 +38,8 @@ import { InputGroupAddon } from 'primeng/inputgroupaddon';
     TableModule,
     ConfirmDialogModule,
     InputGroupModule,
-    InputGroupAddon
+    InputGroupAddon,
+    DialogModule
   ],
   templateUrl: './list-active-conversations.component.html',
   styleUrl: './list-active-conversations.component.scss'
@@ -46,6 +48,7 @@ export class ListActiveConversationsComponent implements OnInit, OnDestroy {
   @Output() totalActiveConversations: EventEmitter<number> = new EventEmitter();
   profile !: any;
   assignmentChangeSubscription: Subscription;
+  assignmentClosedSubscription: Subscription;
   existingAssignee: any;
 
   users!: any[];
@@ -65,6 +68,7 @@ export class ListActiveConversationsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.assignmentChangeSubscription?.unsubscribe();
+    this.assignmentClosedSubscription?.unsubscribe();
   }
   ngOnInit(): void {
     this.profile = JSON.parse(localStorage.getItem('me'));
@@ -72,6 +76,7 @@ export class ListActiveConversationsComponent implements OnInit, OnDestroy {
       this.router.navigate(['login']);
     }
     this.susbscribeAssignemntChangeEvent();
+    this.subscribeCloseConversationEvent();
     this.loadConversations();
     this.loadUsers();
   }
@@ -82,6 +87,14 @@ export class ListActiveConversationsComponent implements OnInit, OnDestroy {
         this.loadConversations();
       }
     });
+  }
+
+  subscribeCloseConversationEvent() {
+    this.assignmentClosedSubscription = this.assignmentEventService.closeConversationEvent$.subscribe((message) => {
+      if (message !== 'skip') {
+        this.loadConversations();
+      }
+    })
   }
 
   loadUsers() {
@@ -160,5 +173,33 @@ export class ListActiveConversationsComponent implements OnInit, OnDestroy {
   cancelAssignment(row: any): void {
     row.isDropdownVisible = false; // Close dropdown without assigning
     row.assigned = this.existingAssignee; // Clear selection
+  }
+
+  closeConversationVisible = false;
+  closedReason;
+  selectedConversation;
+  closePreTask(conversation) {
+    this.closeConversationVisible = true;
+    this.selectedConversation = conversation
+    console.log("this.selectedConversation ", this.selectedConversation);
+  }
+  closeTask() {
+    this.conversationService.close(
+      this.selectedConversation.conversation_id,
+      {
+        "closed_by": this.profile.id,
+        "closed_reason": this.closedReason
+      }
+    ).subscribe((data)=>{
+      this.closeConversationVisible = false;
+      console.log("Conversation closed ", data);
+      //this.sortUserConversationsByStatus();
+      //this.updateNewConversationList();
+      this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Conversation closed successfully' });
+      //this.deleteSpecificConversation(this.activeUser);
+      //this.refreshFilterList();
+      this.loadConversations();
+      this.assignmentEventService.emitCloseConversation("skip");
+    });
   }
 }

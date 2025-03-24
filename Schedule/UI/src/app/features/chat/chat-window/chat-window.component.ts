@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { AfterViewChecked, ChangeDetectorRef, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { AvatarModule } from 'primeng/avatar';
@@ -17,13 +17,16 @@ import { ScheduleEventService } from '../../../shared/services/Events/schedule-e
 import { OrganizationService } from '../../../shared/services/Organization/organization.service';
 import { STATUSES } from './models';
 import { ContactService } from '../../../shared/services/Contact/contact.service';
-import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmPopupModule } from 'primeng/confirmpopup'; 
 import { PlatformService } from '../../../shared/services/Platform/platform.service';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { query } from '@angular/animations';
 import { SelectModule } from 'primeng/select';
+import { MessagePreviewComponent } from '../../campaign/message-preview/message-preview.component';
+import { TemplateService } from '../../../shared/services/campaign/template.service';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { FloatLabelModule } from 'primeng/floatlabel';
+import { PerformJsonOpPipe } from '../../../shared/pipes/perform-json-op.pipe';
 
 
 @Component({
@@ -44,7 +47,13 @@ import { SelectModule } from 'primeng/select';
     ToastModule,
     SelectModule,
     DialogModule,
-    ConfirmPopupModule
+    ConfirmPopupModule,
+    ProgressSpinnerModule,
+    FloatLabelModule,
+
+    PerformJsonOpPipe,
+    
+    MessagePreviewComponent
   ],
   providers: [
     MessageService,
@@ -57,6 +66,7 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
   @Output() newUniqueConversationMessageCount: EventEmitter<any> = new EventEmitter();
   total_new_conversation_count = [];
   assignmentChangeSubscription: Subscription;
+  assignmentClosedSubscripotion: Subscription;
   statuses = STATUSES;
   messageReceivedFrom = {
     img: 'https://cdn.livechat-files.com/api/file/lc/img/12385611/371bd45053f1a25d780d4908bde6b6ef',
@@ -91,8 +101,10 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       private organizationService: OrganizationService,
       private assignmentEventService: ScheduleEventService,
       private contactService: ContactService,
-      private platforService: PlatformService
-    ) { }
+      private platforService: PlatformService,
+      private campaignService: TemplateService,
+      ) {
+      }
 
     ngOnInit() {
       this.profile = JSON.parse(localStorage.getItem('me'));
@@ -107,8 +119,8 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       );
       this.loadRegisteredPlatforms();
       this.susbscribeAssignemntChangeEvent();
-      this.loadContacts();
-      this.loadUsers();
+      this.subscribeCloseConversationEvent();
+      this.loadContents();
       this.connectWebSocket();
       //this.scrollToBottom();
     }
@@ -116,9 +128,21 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       this.scrollToBottom();   
     }
 
+
+    loadContents() {
+      this.loadContacts();
+      this.loadUsers();
+    }
+
     susbscribeAssignemntChangeEvent() {
       this.assignmentChangeSubscription = this.assignmentEventService.assignmentEvent$.subscribe(() => {
-        this.loadConversations();
+        this.loadUsers();
+      });
+    }
+
+    subscribeCloseConversationEvent() {
+      this.assignmentClosedSubscripotion = this.assignmentEventService.closeConversationEvent$.subscribe((message) => {
+        this.loadContents();
       });
     }
 
@@ -550,8 +574,7 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
         this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Conversation closed successfully' });
         //this.deleteSpecificConversation(this.activeUser);
         //this.refreshFilterList();
-        this.loadContacts();
-        this.loadConversations()
+        this.assignmentEventService.emitCloseConversation("Conversation Closed");
       });
     }
 
@@ -573,20 +596,83 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
       );
     }
 
+    openConversationVisible = undefined;
+    selectedTemplate = undefined;
     selected_platform = undefined;
+    avaliable_templates = undefined;
+    loadingTemplates = false;
+    
     onPlatformSelected() {
       console.log("selected_platform ", this.selected_platform);
+      this.loadingTemplates = true;
+      this.campaignService.getTemplates(this.selected_platform?.id).subscribe((templates_list) => {
+        // At this moment we support only whatsapp
+        this.avaliable_templates = templates_list["whatsapp"];
+        console.log("this.templates ", this.avaliable_templates);
+        this.loadingTemplates = false;
+      });
     }
 
-    newConversation() {
+    extractParameterVariables(text: string): string[] {
+      const regex = /{{(.*?)}}/g;
+      const matches = [];
+      let match;
+  
+      while ((match = regex.exec(text)) !== null) {
+        matches.push(match[1].trim()); // Extract and trim the variable name
+      }
+  
+      return matches;
+    }
+
+    onSelectTemplate() {
+      
+      if (this.selectedTemplate) {
+        this.addField();
+      }
+      else {
+        this.selectedTemplate = undefined;
+      }
+      this.selectedTemplate = this.selectedTemplate;
+    }
+
+    // Dynamic array of fields
+    dynamicFields: string[] = [];
+    // Store values for each field
+    fieldValues: { [key: string]: string } = {};
+    // Add field dynamically with validation
+    addField() {
+      let parameterVariables = [];
+      for (let section of this.selectedTemplate.components) {
+        parameterVariables.push(...this.extractParameterVariables(section.text))
+      }
+      console.log("parameterVariables ", parameterVariables);
+      if (parameterVariables) {
+        for (let param of parameterVariables) {
+          this.dynamicFields.push(param);
+          this.fieldValues[param] = '';
+        }
+      }
+    }
+
+    get isFiledValuesValid() {
+      return !Object.values(this.fieldValues).some(value => value === '');
+    }
+
+
+    startNewConversation() {
+      // TODO: Handle template payload in BE
       let user;
+      this.openConversationVisible = false;
       console.log("new conversation activeUser ", this.activeUser);
       this.conversationService.new(
         {
           "organization_id": this.profile.organization,
           "platform_id": this.selected_platform.id,
           "contact_id": this.activeUser.id,
-          "user_id": this.profile.id
+          "user_id": this.profile.id,
+          "template": this.selectedTemplate,
+          "template_parameters": this.fieldValues
         }
       ).subscribe(
       (success_data: any) => {
@@ -622,6 +708,10 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
         this.messageService.add({ severity: 'danger', summary: 'Failed', detail: 'New conversation can not be started', sticky: true });
       }
     );
+    }
+
+    newConversation() {
+      this.openConversationVisible = true;
     }
 
     //scrollToBottom(): void {
@@ -718,6 +808,7 @@ export class ChatWindowComponent implements OnInit, AfterViewChecked, OnDestroy 
     ngOnDestroy(): void {
       this.messageSubscription?.unsubscribe();
       this.assignmentChangeSubscription?.unsubscribe();
+      this.assignmentClosedSubscripotion?.unsubscribe();
     }
 
     

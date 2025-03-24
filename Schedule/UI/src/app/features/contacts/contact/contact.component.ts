@@ -219,7 +219,7 @@ export class ContactComponent {
                 this.product = {};
                 this.dialogProgress = false;
                 this.productDialog = false;
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Contact Not Created', sticky: true });
+                this.messageService.add({ severity: 'error', summary: 'Error', detail: err?.error?.error, sticky: true });
               }
             );
         }
