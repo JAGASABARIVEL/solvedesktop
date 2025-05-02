@@ -103,13 +103,13 @@ def send_msg_from_customer(phone_number_id, from_user, msg, msg_type, msg_from_t
     Formats and publishes a message to Kafka.
     """
     try:
-        if msg_type == "text":
-            message = {
-                "recipient_id": from_user,
-                "message_body": msg,
-                "phone_number_id": phone_number_id,
-                "msg_from_type": msg_from_type
-            }
+        message = {
+            "msg_type": msg_type,
+            "recipient_id": from_user,
+            "message_body": msg,
+            "phone_number_id": phone_number_id,
+            "msg_from_type": msg_from_type
+        }
         publish_message(TOPIC, message)
     except Exception as e:
         logger.error(f"Error sending message: {e}")
@@ -169,6 +169,16 @@ def whatsapp_webhook():
                         text_message = message['text']['body']
                         logger.info(f"Received text message details {recipient_id}: {text_message}")
                         send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg=text_message, msg_type="text", msg_from_type="CUSTOMER")
+                    elif message.get('type') == 'document':
+                        caption = message['document']['caption']
+                        media_id = message['document']['id']
+                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="document", msg_from_type="CUSTOMER")
+                    elif message.get('type') == 'image':
+                        media_id = message['image']['id']
+                        caption = "image_" + str(media_id)
+                        if message['image'].get('caption', None):
+                            caption = message['image']['caption']
+                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="image", msg_from_type="CUSTOMER")
                     else:
                         logger.info(f"Unsupported message type {message.get('type')}")
                         logger.info(f"Received message details {recipient_id}: {message}")
