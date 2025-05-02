@@ -170,8 +170,10 @@ def whatsapp_webhook():
                         logger.info(f"Received text message details {recipient_id}: {text_message}")
                         send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg=text_message, msg_type="text", msg_from_type="CUSTOMER")
                     elif message.get('type') == 'document':
-                        caption = message['document']['caption']
                         media_id = message['document']['id']
+                        caption = message['document']['filename']
+                        if message['document'].get('caption', None):
+                            caption = message['document']['caption']
                         send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="document", msg_from_type="CUSTOMER")
                     elif message.get('type') == 'image':
                         media_id = message['image']['id']
