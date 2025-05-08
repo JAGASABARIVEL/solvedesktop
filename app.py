@@ -173,15 +173,17 @@ def whatsapp_webhook():
                     elif message.get('type') == 'document':
                         media_id = message['document']['id']
                         caption = message['document']['filename']
+                        mime_type = message['document']['mime_type']
                         if message['document'].get('caption', None):
                             caption = message['document']['caption']
-                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="document", msg_from_type="CUSTOMER")
+                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type=mime_type, msg_from_type="CUSTOMER")
                     elif message.get('type') == 'image':
                         media_id = message['image']['id']
                         caption = "image_" + str(media_id)
+                        mime_type = message['image']['mime_type']
                         if message['image'].get('caption', None):
                             caption = message['image']['caption']
-                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="image", msg_from_type="CUSTOMER")
+                        send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type=mime_type, msg_from_type="CUSTOMER")
                     else:
                         logger.info(f"Unsupported message type {message.get('type')}")
             return jsonify({"status": "success"}), 200
