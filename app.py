@@ -165,6 +165,7 @@ def whatsapp_webhook():
                 messages = value['messages']
                 for message in messages:
                     recipient_id = message.get('from')
+                    logger.info(f"Received message details {recipient_id}: {message}")
                     if message.get('type') == 'text':
                         text_message = message['text']['body']
                         logger.info(f"Received text message details {recipient_id}: {text_message}")
@@ -183,7 +184,6 @@ def whatsapp_webhook():
                         send_msg_from_customer(phone_number_id=phone_number_id, from_user=recipient_id, msg={"caption": caption, "media_id": media_id}, msg_type="image", msg_from_type="CUSTOMER")
                     else:
                         logger.info(f"Unsupported message type {message.get('type')}")
-                        logger.info(f"Received message details {recipient_id}: {message}")
             return jsonify({"status": "success"}), 200
         except Exception as e:
             logger.error(f"Error processing webhook: {e}")
